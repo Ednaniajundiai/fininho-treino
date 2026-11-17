@@ -1,6 +1,6 @@
 # Spec: Fichas de treino
 
-**Branch / pasta**: `002-fichas-treino` | **Criada em**: 2026-11-17 | **Status**: Rascunho
+**Branch / pasta**: `002-fichas-treino` | **Criada em**: 2026-11-17 | **Status**: Aprovado em 2026-11-17
 
 ## Problema
 
@@ -30,6 +30,7 @@ a feature seguinte (registro da sessão) não tem o que registrar.
 - Catálogo compartilhado entre professores.
 - Aluno ver fichas arquivadas diretamente (aparecem pelo histórico de sessões, na 003).
 - Fases de adaptação automáticas: o professor edita a ficha.
+- Reativar ficha arquivada: quem quiser reaproveitar uma ficha arquivada a duplica.
 
 ## Histórias de Usuário e Cenários *(obrigatório)*
 
@@ -92,13 +93,14 @@ outra e ver a anterior arquivada.
 2. **Dado** uma ficha ativa, **Quando** o professor ativa outra do mesmo aluno, **Então** a anterior fica arquivada e continua legível.
 3. **Dado** uma ficha qualquer do professor, **Quando** ele a duplica para outro aluno dele, **Então** nasce uma ficha nova, independente, com os mesmos dias e itens.
 4. **Dado** um exercício em uso numa ficha, **Quando** o professor o remove do catálogo, **Então** ele é desativado e some das novas escolhas, sem sumir das fichas existentes.
-5. **Dado** uma ficha arquivada, **Quando** o professor tenta editá-la, **Então** o sistema recusa. *(ver Pendente 2)*
+5. **Dado** uma ficha arquivada, **Quando** o professor tenta editá-la ou reativá-la, **Então** o sistema recusa; ela só pode ser lida e duplicada.
+6. **Dado** uma ficha com mais de 10 dias, ou um dia com mais de 30 itens, **Quando** o professor salva, **Então** o sistema recusa e diz o limite.
 
 ---
 
 ### Casos de Borda
 
-- Número de dias livre (mínimo 1); rótulos em sequência A, B, C… mesmo ao reordenar ou remover dias.
+- Entre 1 e 10 dias por ficha (rótulos A–J) e até 30 itens por dia; rótulos em sequência A, B, C… mesmo ao reordenar ou remover dias.
 - Remover o último item de um dia, ou o último dia de uma ficha ativa, é recusado.
 - Exercício desativado continua aparecendo nas fichas que já o usam.
 - Dois professores podem ter exercícios com o mesmo nome, cada um no seu catálogo.
@@ -110,12 +112,13 @@ outra e ver a anterior arquivada.
 - **FR-002**: O sistema DEVE recusar nome de exercício duplicado no catálogo do mesmo professor, sem diferença de maiúsculas. *(História 1)*
 - **FR-003**: O sistema DEVE permitir ao professor criar uma ficha para um aluno dele, com nome e dias em rotação (rótulo em sequência e título), em ordem definida por ele. *(História 1)*
 - **FR-004**: O sistema DEVE permitir itens de força (exercício do catálogo, séries ≥ 1, faixa mínima ≤ máxima, unidade repetições ou segundos, observação opcional) e de cardio (modalidade esteira, bike, escada ou livre; duração mínima ≤ máxima em minutos; observação opcional), em ordem, podendo misturar tipos no mesmo dia. *(História 1)*
-- **FR-005**: O sistema DEVE exigir ao menos um dia por ficha e ao menos um item por dia para ativá-la. *(História 1)*
+- **FR-005**: O sistema DEVE exigir ao menos um dia por ficha e ao menos um item por dia para ativá-la, e no máximo 10 dias por ficha e 30 itens por dia. *(História 1)*
 - **FR-006**: O sistema DEVE manter no máximo uma ficha ativa por aluno; ativar outra DEVE arquivar a anterior, que continua legível. *(Histórias 1 e 3)*
 - **FR-007**: O sistema DEVE restringir criação, edição, ativação, arquivamento, duplicação e catálogo ao professor dono, respondendo "não encontrado" para aluno ou ficha de outro professor e "sem permissão" para o papel aluno. *(Histórias 1, 2 e 3)*
 - **FR-008**: O aluno DEVE conseguir ver a ficha ativa dele, com dias e itens como prescritos, e só os exercícios dessa ficha; sem ficha ativa, vê um aviso. *(História 2)*
 - **FR-009**: O sistema DEVE permitir ao professor editar a ficha ativa livremente, mesmo com sessões já registradas. *(História 3)*
 - **FR-010**: O sistema DEVE permitir ao professor arquivar uma ficha e duplicar qualquer ficha dele para qualquer aluno dele, gerando ficha nova independente. *(História 3)*
+- **FR-014**: O sistema DEVE tratar ficha arquivada como só leitura: sem edição e sem reativação; para reaproveitá-la, o professor a duplica. *(História 3)*
 - **FR-011**: O sistema DEVE desativar, em vez de apagar, exercício usado em ficha ou sessão; desativado some das novas escolhas e continua nas fichas existentes. *(Histórias 1 e 3)*
 - **FR-012**: O sistema DEVE guardar a ordem dos dias da ficha como base da rotação (`fichas/C-03`). *(Histórias 1 e 3)*
 - **FR-013**: As telas DEVEM exibir a ficha e os formulários em português, adaptados ao celular. [sem teste: validação manual] *(Histórias 1 e 2)*
@@ -149,17 +152,16 @@ pode mudar no portão da spec):
 - Edição livre da ficha ativa; o histórico é protegido pela cópia da prescrição em `sessoes/C-01`.
 - Ficha nova do zero ou duplicando qualquer ficha do próprio professor.
 - Catálogo vazio em produção; exercício só com nome e unidade padrão, sem grupo muscular.
-- Número de dias livre (mínimo 1); o aluno vê só a ficha ativa.
+- O aluno vê só a ficha ativa.
+- Ficha arquivada é só leitura, sem reativar (Q-1); teto de 10 dias e 30 itens por dia (Q-2). Aceitas por delegação na entrevista da 002, em 2026-11-17.
 
-**Pendente** (nenhuma bloqueia a aprovação, mas pede decisão no portão ou no plan):
+**Pendente**: nenhuma bloqueante.
 
-1. **Divergência BOARD × contrato**: a linha da 002 no `BOARD.md` cita "carga" na ficha; `fichas/C-01` não tem carga no item. Recomendação: manter sem carga e corrigir o BOARD na PR da 002.
-2. **Ficha arquivada: editável ou só leitura?** A spec assume só leitura (cenário 3.5); a nota de respostas não cobre.
-3. **Teto de dias e de itens**: assumido sem teto de negócio; limites técnicos ficam para o plan.
+**Resolvido**: a divergência BOARD × contrato (carga na ficha) fica assim: sem carga na ficha; o `BOARD.md` é corrigido na PR da 002.
 
 ## Contratos tocados
 
-- **MODIFICADO** `fichas/C-01`: sem mudança de formato; confirma que o item não tem carga, que a ficha arquivada é só leitura e que o professor edita a ficha ativa livremente. `003` e `006` consomem sem alteração.
+- **MODIFICADO** `fichas/C-01`: sem mudança de formato; confirma que o item não tem carga, que a ficha arquivada é só leitura (sem reativar), que o professor edita a ficha ativa livremente e que há teto de 10 dias por ficha e 30 itens por dia. `003` e `006` consomem sem alteração.
 - **MODIFICADO** `fichas/C-02`: sem mudança de regra; acrescenta que o catálogo começa vazio em produção e que o exercício não tem grupo muscular.
 - **MODIFICADO** `fichas/C-03`: sem mudança de regra; a `002` fixa a ordem dos dias que a `003` usa para calcular o próximo dia.
 - `autenticacao/C-01`: apenas consumido (papéis e posse), sem alteração.

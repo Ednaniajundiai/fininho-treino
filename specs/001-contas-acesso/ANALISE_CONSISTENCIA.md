@@ -1,3 +1,49 @@
+# Análise de consistência: 001-contas-acesso (rodada 2)
+
+**Veredito**: PRONTO PARA IMPLEMENTAR
+
+Rodada 2 · commit analisado `fe2e60a75af1cc2c98e480cddfd366817b2391ba` · 2026-11-17 ·
+escopo: o bloqueante da rodada 1 e o diff `fca1a1b..fe2e60a` em `specs/001-contas-acesso`.
+
+Script `rastrear.sh` no novo commit: 20 FRs, 54 tarefas, perfil Padrão, 0 achados objetivos
+(proporção: 2,7 tarefas por FR, 14 decisões, veredito ADEQUADO).
+
+## Bloqueante da rodada 1
+
+1. **Contradição spec × plan: logout público** — **RESOLVIDO** (opção a).
+   - `spec.md` FR-010 agora inclui "sair" nas exceções e diz que sair "vale pela credencial de
+     renovação do aparelho, mesmo com o acesso de 15 minutos já vencido"; o cenário 9 da
+     História 1 repete a lista com "sair".
+   - O delta de `autenticacao/C-01` em "Contratos tocados" registra que sair entra nas exceções
+     públicas; a T052 aplica o delta.
+   - Bate com o `plan.md` ("Rotas da API": `POST /auth/logout | pública (vale o cookie)`; o
+     `Path=/api/auth` do cookie cobre o logout).
+   - T019 passa a provar o comportamento: logout só com o cookie, sem token de acesso, e cita
+     FR-010.
+
+## Diff desde a rodada 1
+
+Nenhuma contradição nova. As mudanças em `plan.md` e `tasks.md` atendem melhorias da rodada 1:
+
+- Melhoria 1 (401 de `trocar-senha`): atendida em T043.
+- Melhoria 2 (`CHECK` da migration): atendida em T010 (`migration.e2e-spec.ts`).
+- Melhoria 3 (FR-019, argon2id): atendida em T016.
+- Melhoria 4 (T017 instável): atendida; a conta entra a partir de outra origem.
+- Melhoria 5 (claim de senha provisória): atendida no delta de `autenticacao/C-03`.
+- Melhoria 7 (número de decisões): atendida em "Sinais" ("7 (mais 7 secundárias)").
+
+## Melhorias que seguem abertas (sem nova rodada)
+
+1. **[DECISÃO SEM DONO] HS256 e `trust proxy`** (melhoria 6 da rodada 1): sem mudança. Baratas
+   de reverter.
+2. **[DESVIO TRANSITÓRIO] Node 22.14 local** (melhoria 8 da rodada 1): sem mudança; decidir antes
+   da T001.
+3. **[A VERIFICAR] Logout sem cookie** (novo em T019): a tarefa diz que "sem cookie responde
+   sem erro e sem efeito", mas o `plan.md` ("Rotas da API") não descreve esse caso. Não
+   contradiz spec nem plan; vale anotar a resposta esperada (por exemplo, 204) na linha da rota.
+
+---
+
 # Análise de consistência: 001-contas-acesso (rodada 1)
 
 **Veredito**: BLOQUEADO — 1 bloqueante

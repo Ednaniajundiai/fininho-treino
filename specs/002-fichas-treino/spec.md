@@ -72,7 +72,7 @@ aparece é igual ao prescrito; entrar como outro aluno e não ver nada dessa fic
 
 1. **Dado** um aluno com ficha ativa, **Quando** abre a ficha, **Então** vê todos os dias e itens exatamente como prescritos.
 2. **Dado** um aluno sem ficha ativa, **Quando** abre a ficha, **Então** vê um aviso de que ainda não há ficha.
-3. **Dado** a ficha de outro aluno, **Quando** o aluno tenta acessá-la, **Então** a resposta é "não encontrado".
+3. **Dado** o aluno B, **Quando** abre a ficha dele, **Então** vê só a ficha ativa dele, nunca a do aluno A; o aluno não tem rota por id de ficha e recebe "sem permissão" nas rotas do professor.
 4. **Dado** um aluno, **Quando** tenta criar ou editar ficha, **Então** a resposta é "sem permissão".
 
 ---

@@ -53,7 +53,7 @@ infraestrutura, serviço ou dependência além de `react-hook-form`/`zod` do pad
 14 · serviço ou dependência nova não (só `react-hook-form`) · interface com uma só implementação
 não · configuração sem segundo uso não
 
-**Veredito**: ENXUTO — CRUD sobre a base existente, sem sinais de alerta.
+**Veredito**: ADEQUADO — CRUD sobre a base existente, sem serviço nem dependência nova relevante. Um sinal de alerta, medido no tasks: 55 tarefas para 14 FRs (3,9 por FR, acima de 3), porque cada FR leva teste mais tarefa de rota, tela e fundação. Um sinal só não é EXCESSO. Revisto de ENXUTO após a análise (2026-11-17).
 
 ## Contexto Técnico
 
@@ -181,7 +181,7 @@ IV); sem pacote compartilhado.
 - **Nomes da 001**: o plan usa os da 001 ainda sem código; conferir antes de implementar.
 - **`PUT` troca ids de dia e item**: seguro porque a 003 guarda cópia da prescrição na sessão e
   não aponta para itens. Se a 003 passar a referenciar item, revisar D-02.
-- **`DRAFT`**: estado extra além do contrato; contido na API (aluno e 003 só veem `ACTIVE`).
+- **`DRAFT`**: estado extra além do contrato; contido na API (aluno e 003 só veem `ACTIVE`). Aprovado pelo dono em 2026-11-17; registrar em `fichas/C-01` no fechamento (T050). A cópia feita por `duplicar` nasce `DRAFT`.
   Confirmar na aprovação ou remover e criar já ativa.
 - **Migration**: segunda do projeto, sem dado a preservar antes da 005.
 

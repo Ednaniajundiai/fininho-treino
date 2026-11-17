@@ -145,4 +145,4 @@ banco de produção.
 
 - Teste de migration e de concorrência (T015) leva o marcador `lento` (roda só na CI).
 - Se a 003 passar a referenciar itens da ficha, revisar D-02 (`PUT` troca ids de dia e item).
-- `DRAFT` é estado extra além do contrato (risco do plan); confirmar ou remover antes da implementação, o que altera T012, T019 e T027.
+- `DRAFT` é estado extra além do contrato; aprovado pelo dono em 2026-11-17 (registrar em `fichas/C-01` no T050). A cópia de `duplicar` nasce `DRAFT`.

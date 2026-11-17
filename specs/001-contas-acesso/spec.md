@@ -225,7 +225,13 @@ senha e chegar à tela inicial de aluno; sair e entrar com a nova.
 
 ## Exceções à Constituição
 
-- Sem exceções — segue a constituição integralmente.
+- **`stack.md` (Testes: Jest) e `workflow.md` (marcador `lento` do Jest)**: a API usa **Vitest**
+  no lugar do Jest, e **oxlint** no lugar do ESLint. Motivo: o NestJS 12 (estável atual, exigida
+  pelo próprio `stack.md`) é só ESM e o esqueleto oficial dele vem com Vitest e oxlint; forçar
+  Jest iria contra o framework. A API de teste é equivalente (`describe`, `it`, `expect`). A
+  separação continua a mesma: `test` roda só unidade e `test:e2e` roda os `*.e2e-spec.ts`.
+  Aprovada pelo dono em 2026-11-17 ("Nest 12 + Vitest"). Vale propor emenda ao `stack.md` no
+  fechamento, para as próximas features não repetirem a exceção.
 
 ---
 

@@ -31,6 +31,7 @@ dele; todas ficam abertas a veto na aprovação.
 | D-11 | Limite de tentativas | A. `@nestjs/throttler` em memória, só no login; B. contador no banco | A | secundária (não vetada) | FR-006 | baixo |
 | D-12 | Ids | A. UUID gerado pelo banco; B. autoincremento | A: id não revela contagem nem ordem | secundária (não vetada) | — | alto |
 | D-13 | Nomes no banco e na API | tabelas e colunas em inglês (`users`, `refresh_tokens`, `teacher_id`, `must_change_password`); valores de domínio e rotas em português (`PROFESSOR`, `ALUNO`, `/alunos`, `/auth/trocar-senha`) | como descrito | secundária (não vetada) | — | médio |
+| D-15 | Teste e lint da API (decisão surgida na implementação) | A. NestJS 12 com Vitest e oxlint (padrão do esqueleto oficial); B. NestJS 12 com Jest forçado em ESM; C. NestJS 11 com Jest e ESLint | A, com exceção ao `stack.md` registrada na spec | usuário | SC-002, SC-003 | médio |
 | D-14 | Deriva do contrato OpenAPI | a CI regenera `openapi.json` e os tipos do front e falha se houver diferença | como descrito | secundária (não vetada) | FR-002 | baixo |
 
 **Herdado da constituição (não entrevistado)**: NestJS, Prisma, PostgreSQL, Swagger,
@@ -90,7 +91,7 @@ refresh_tokens
   índices: user_id, family_id
 ```
 
-**Testes**: Jest. Unidade (gate rápido, sem banco): normalização de e-mail, política de senha,
+**Testes**: Vitest (D-15; o plan original dizia Jest). Unidade (gate rápido, sem banco): normalização de e-mail, política de senha,
 geração de senha provisória, decisão da rotação (válido, vencido, reuso), guards. E2E
 (`*.e2e-spec.ts`, `test:e2e`, Postgres de teste): toda rota com sem token (401), papel errado
 (403), dado de outro dono (404) e caminho feliz; rotação e reuso de ponta a ponta; migration
@@ -177,6 +178,8 @@ aluno. Usa o mesmo `UsuariosService` da API.
 
 ## Checagem de Constituição
 
+- **Stack (`stack.md`)**: uma exceção, registrada na spec: Vitest e oxlint na API no lugar de
+  Jest e ESLint (D-15), aprovada pelo dono.
 - **I. Posse no servidor**: respeita. Guards globais negam por padrão; a posse do aluno é
   filtrada no service por `teacher_id`; todo e2e de rota cobre 401, 403 e 404 de outro dono.
 - **II. Nenhum dado real**: respeita. Seed, testes e capturas usam contas fictícias
@@ -261,4 +264,6 @@ quando houver código usado pelos dois; os tipos chegam ao front pelo OpenAPI).
 
 ## Rastreamento de Complexidade
 
-Sem violações a justificar.
+| Violação | Por que é necessária | Alternativa mais simples rejeitada porque |
+|---|---|---|
+| Vitest e oxlint na API, contra o Jest do `stack.md` | NestJS 12 é só ESM e entrega Vitest e oxlint no esqueleto oficial | Jest em ESM é configuração frágil contra o framework; NestJS 11 deixaria de ser a estável atual |

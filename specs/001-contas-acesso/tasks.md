@@ -17,9 +17,9 @@ História 1 e entra no commit dela.
 
 - [ ] T001 Ativar o pnpm via `corepack` e conferir a versão do Node contra o `engines` do Prisma 7.10.1; registrar o resultado no `ESTADO.md` se bloquear (D-07)
 - [ ] T002 Criar a raiz do monorepo: `package.json` (scripts `dev`, `lint`, `typecheck`, `test`, `build`, `format`, `packageManager`), `pnpm-workspace.yaml`, `.nvmrc`, `.env.example` (depende de T001)
-- [ ] T003 Criar `apps/api` com NestJS 12, TypeScript `strict`, Jest (script `test` só unidade, `test:e2e` para `*.e2e-spec.ts`), conferindo a combinação Jest/TypeScript na doc do Nest (depende de T002)
+- [ ] T003 Criar `apps/api` com NestJS 12, TypeScript `strict`, Vitest, padrão do esqueleto (D-15; script `test` só unidade, `test:e2e` para `*.e2e-spec.ts`) (depende de T002)
 - [ ] T004 [P] Criar `apps/web` com Next.js (App Router), Tailwind, shadcn/ui com os tokens do `~/.claude/DESIGN.base.md` e TanStack Query (depende de T002)
-- [ ] T005 [P] Configurar ESLint e Prettier compartilhados na raiz, com `lint` e `typecheck` em cada app (depende de T003, T004)
+- [ ] T005 [P] Configurar lint (oxlint na API, ESLint do Next no front) e Prettier compartilhado na raiz, com `lint` e `typecheck` em cada app (depende de T003, T004)
 - [ ] T006 [P] Criar `docker-compose.yml` (Postgres com volume) e `scripts/postgres-init.sql` (cria o banco `fininho_treino_test`) (FR-001)
 
 ## Fase 2: Fundação (Bloqueante)

@@ -67,8 +67,8 @@ recarregar a página (continua dentro) e sair.
    e a tela de entrar aparece.
 8. **Dado** uma credencial de renovação já usada, **Quando** alguém a apresenta de novo,
    **Então** todas as sessões derivadas daquele login caem e é preciso entrar de novo.
-9. **Dado** alguém sem sessão, **Quando** chama qualquer operação que não seja entrar, renovar
-   ou a verificação de saúde, **Então** recebe "não autenticado".
+9. **Dado** alguém sem sessão, **Quando** chama qualquer operação que não seja entrar, renovar,
+   sair ou a verificação de saúde, **Então** recebe "não autenticado".
 
 ---
 
@@ -152,8 +152,9 @@ senha e chegar à tela inicial de aluno; sair e entrar com a nova.
   derivadas do mesmo login. *(História 1)*
 - **FR-009**: Sair DEVE invalidar a sessão do aparelho, sem afetar outros aparelhos.
   *(História 1)*
-- **FR-010**: Toda operação DEVE exigir usuário autenticado, exceto entrar, renovar a sessão e a
-  verificação de saúde. *(História 1)*
+- **FR-010**: Toda operação DEVE exigir usuário autenticado, exceto entrar, renovar a sessão, sair e
+  a verificação de saúde; sair vale pela credencial de renovação do aparelho, mesmo com o acesso
+  de 15 minutos já vencido. *(História 1)*
 - **FR-011**: O usuário autenticado DEVE conseguir consultar a própria conta (nome, e-mail,
   papel e se a senha é provisória). *(História 1)*
 - **FR-012**: Só professor DEVE conseguir criar conta de aluno, com nome e e-mail; o aluno fica
@@ -211,14 +212,16 @@ senha e chegar à tela inicial de aluno; sair e entrar com a nova.
 ## Contratos tocados
 
 - **MODIFICADO** `autenticacao/C-01`: a lista de exceções públicas e o comando administrativo
-  ganham detalhe: o comando também redefine a senha de professor e pode criar mais de um.
+  ganham detalhe: sair entra nas exceções públicas (vale pela credencial de renovação, mesmo
+  com o acesso vencido); o comando também redefine a senha de professor e pode criar mais de um.
 - **MODIFICADO** `autenticacao/C-02`: a senha provisória passa a ser gerada pelo sistema e
   mostrada uma única vez (o professor não a escolhe); o professor pode redefini-la; conta com
   senha provisória pode, além de trocar a senha, consultar a própria conta, renovar a sessão e
   sair; regra de senha de 8 a 128 caracteres; trocar ou redefinir a senha derruba as sessões.
 - **MODIFICADO** `autenticacao/C-03`: várias sessões simultâneas por conta são permitidas;
   limite de 5 tentativas de login por minuto por origem; o front e a API ficam na mesma origem;
-  o cookie de renovação vale para a renovação e para o logout (não só para a renovação).
+  o cookie de renovação vale para a renovação e para o logout (não só para a renovação); o
+  token de acesso carrega também a marca de senha provisória.
 
 ## Exceções à Constituição
 

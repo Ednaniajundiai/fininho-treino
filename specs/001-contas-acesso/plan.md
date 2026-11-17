@@ -50,7 +50,7 @@ infraestrutura de desenvolvimento). Dentro disso, cada escolha é a mais baixa q
 biblioteca oficial em vez de Passport, Compose em vez de Testcontainers, script em vez de
 biblioteca de CLI, limite em memória em vez de Redis, nenhum pacote compartilhado.
 
-**Sinais**: tarefas por FR 2,7 (alerta acima de 3) · decisões de entrevista 7
+**Sinais**: tarefas por FR 2,7 (alerta acima de 3) · decisões de entrevista 7 (mais 7 secundárias)
 versus FRs 20 · serviço ou dependência nova sim (tudo é novo; nenhum serviço pago nem
 infraestrutura além do Postgres) · interface com uma só implementação não · configuração sem
 segundo uso não

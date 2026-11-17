@@ -27,7 +27,7 @@ História 1 e entra no commit dela.
 - [ ] T007 Configurar o Prisma 7.10.1 em `apps/api` (`prisma/schema.prisma`, `PrismaModule`, `PrismaService` em `apps/api/src/prisma/`), conferindo configuração e adaptador na doc oficial (depende de T003, T006)
 - [ ] T008 Modelar `users` e `refresh_tokens` em `apps/api/prisma/schema.prisma` e gerar a primeira migration, com o `CHECK` de aluno/professor escrito à mão (D-01, D-12, D-13) (depende de T007)
 - [ ] T009 Montar `apps/api/src/main.ts` e `app.module.ts`: prefixo `/api`, `ValidationPipe` global com `whitelist`, `cookie-parser`, `trust proxy`, `ConfigModule` com validação das variáveis, Swagger em `/api/docs` (depende de T007)
-- [ ] T010 Criar o suporte de e2e em `apps/api/test/`: `globalSetup` que aplica as migrations do zero no banco de teste (`lento`), utilitário de limpeza das tabelas e fábricas de contas fictícias `*@exemplo.test` (depende de T008, T009)
+- [ ] T010 Criar o suporte de e2e em `apps/api/test/`: `globalSetup` que aplica as migrations do zero no banco de teste (`lento`), utilitário de limpeza das tabelas, fábricas de contas fictícias `*@exemplo.test` e um teste e2e de que o banco recusa aluno sem professor e professor com professor (`apps/api/test/migration.e2e-spec.ts`) (depende de T008, T009)
 - [ ] T011 [P] Criar `.github/workflows/ci.yml`: Node 24, Postgres como service container, lint, formatação, tipos, unidade, e2e, build e a checagem de deriva do OpenAPI (FR-002, D-14) (depende de T005)
 
 **Checkpoint**: `docker compose up -d`, migration aplicada, API sobe e a suíte vazia passa.
@@ -49,10 +49,10 @@ sair.
 - [ ] T013 [P] [US1] Teste de unidade: decisão da rotação (válido, vencido, já usado, revogado) e hash do token em `apps/api/src/auth/tokens.spec.ts` (FR-007, FR-008)
 - [ ] T014 [P] [US1] Teste de unidade: `JwtAuthGuard` nega sem token, com token inválido e vencido, e libera `@Public()` em `apps/api/src/auth/guards/jwt-auth.guard.spec.ts` (FR-010)
 - [ ] T015 [P] [US1] Teste e2e (`lento`): CLI cria professor com senha definitiva (cenário 1); recusa professor existente sem `--redefinir`; com `--redefinir` troca a senha e derruba as sessões (cenário 2); recusa e-mail de aluno, em `apps/api/test/cli.e2e-spec.ts` (FR-003, FR-004)
-- [ ] T016 [P] [US1] Teste e2e (`lento`): login correto devolve token e conta (cenário 3); e-mail inexistente e senha errada dão a mesma resposta (cenário 4); a senha e o hash nunca aparecem na resposta, em `apps/api/test/auth-login.e2e-spec.ts` (FR-005, FR-019)
-- [ ] T017 [P] [US1] Teste e2e (`lento`): 6ª tentativa de login em um minuto recebe 429 e a conta continua entrando depois (cenário 5), em `apps/api/test/auth-login.e2e-spec.ts` (FR-006)
+- [ ] T016 [P] [US1] Teste e2e (`lento`): login correto devolve token e conta (cenário 3); e-mail inexistente e senha errada dão a mesma resposta (cenário 4); a senha e o hash nunca aparecem na resposta e o hash gravado é argon2id, em `apps/api/test/auth-login.e2e-spec.ts` (FR-005, FR-019)
+- [ ] T017 [P] [US1] Teste e2e (`lento`): 6ª tentativa de login em um minuto recebe 429 e a conta não fica bloqueada: a mesma conta entra a partir de outra origem (cenário 5), em `apps/api/test/auth-login.e2e-spec.ts` (FR-006)
 - [ ] T018 [P] [US1] Teste e2e (`lento`): renovação gira o token e o anterior deixa de valer (cenário 6); token vencido dá 401; reuso de token girado derruba a família inteira e não outra família (cenário 8); atributos do cookie (`httpOnly`, `Secure`, `SameSite=Strict`, `Path`), em `apps/api/test/auth-sessao.e2e-spec.ts` (FR-007, FR-008)
-- [ ] T019 [P] [US1] Teste e2e (`lento`): logout revoga só a sessão do aparelho e a outra segue renovando (cenário 7), em `apps/api/test/auth-sessao.e2e-spec.ts` (FR-009)
+- [ ] T019 [P] [US1] Teste e2e (`lento`): logout revoga só a sessão do aparelho e a outra segue renovando (cenário 7); o logout funciona só com o cookie, sem token de acesso, e sem cookie responde sem erro e sem efeito, em `apps/api/test/auth-sessao.e2e-spec.ts` (FR-009, FR-010)
 - [ ] T020 [P] [US1] Teste e2e (`lento`): `GET /api/health` responde sem token; `GET /api/auth/me` dá 401 sem token e com token inválido, e devolve a conta com token válido (cenário 9), em `apps/api/test/health.e2e-spec.ts` e `auth-me.e2e-spec.ts` (FR-010, FR-011)
 
 ### Implementação da História 1
@@ -119,7 +119,7 @@ aluno; sair e entrar com a nova.
 ### Testes para a História 3 ⚠️
 
 - [ ] T042 [P] [US3] Teste de unidade: `SenhaProvisoriaGuard` nega com a claim e libera `@PermiteSenhaProvisoria()`, em `apps/api/src/auth/guards/senha-provisoria.guard.spec.ts` (FR-017)
-- [ ] T043 [P] [US3] Teste e2e (`lento`): o login de conta provisória informa que a senha é provisória (cenário 1); com ela, `me`, `refresh`, `logout` e `trocar-senha` respondem e toda outra rota dá 403 (cenário 2), em `apps/api/test/senha-provisoria.e2e-spec.ts` (FR-017)
+- [ ] T043 [P] [US3] Teste e2e (`lento`): o login de conta provisória informa que a senha é provisória (cenário 1); com ela, `me`, `refresh`, `logout` e `trocar-senha` respondem e toda outra rota dá 403 (cenário 2); `trocar-senha` sem token dá 401, em `apps/api/test/senha-provisoria.e2e-spec.ts` (FR-017)
 - [ ] T044 [P] [US3] Teste e2e (`lento`): a troca com a senha atual certa torna a senha definitiva, derruba as outras sessões, mantém a atual e libera as rotas (cenário 3), em `apps/api/test/senha-provisoria.e2e-spec.ts` (FR-018)
 - [ ] T045 [P] [US3] Teste e2e (`lento`): a troca é recusada com senha atual errada, nova curta, nova longa demais e nova igual à atual (cenário 4), em `apps/api/test/senha-provisoria.e2e-spec.ts` (FR-018)
 

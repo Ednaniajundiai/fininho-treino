@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$HOME/.claude/trilho/hooks/gate-stop.sh\"; if [ -f \"$f\" ]; then bash \"$f\"; fi",
+            "timeout": 300
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|Read|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$HOME/.claude/trilho/hooks/guarda.sh\"; if [ -f \"$f\" ]; then bash \"$f\"; fi",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

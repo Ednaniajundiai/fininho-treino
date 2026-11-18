@@ -1,0 +1,12 @@
+node_modules
+dist
+.next
+coverage
+pnpm-lock.yaml
+apps/api/openapi.json
+apps/api/src/generated
+apps/web/lib/api/schema.d.ts
+apps/api/prisma/migrations
+.claude
+specs
+constitution

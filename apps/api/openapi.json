@@ -141,6 +141,50 @@
         ]
       }
     },
+    "/api/auth/trocar-senha": {
+      "post": {
+        "description": "A senha vira definitiva, as outras sessões da conta caem e a resposta traz uma sessão nova.",
+        "operationId": "AuthController_trocarSenha",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrocarSenhaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Senha atual incorreta, ou nova senha fora da política ou igual à atual."
+          },
+          "401": {
+            "description": "Não autenticado."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Trocar a senha (obrigatório para conta com senha provisória)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/alunos": {
       "post": {
         "operationId": "AlunosController_criar",
@@ -368,6 +412,24 @@
         "required": [
           "accessToken",
           "usuario"
+        ]
+      },
+      "TrocarSenhaDto": {
+        "type": "object",
+        "properties": {
+          "senhaAtual": {
+            "type": "string",
+            "description": "A senha atual (a provisória, no primeiro acesso)."
+          },
+          "novaSenha": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "senhaAtual",
+          "novaSenha"
         ]
       },
       "CriarAlunoDto": {

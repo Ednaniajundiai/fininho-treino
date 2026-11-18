@@ -118,17 +118,17 @@ aluno; sair e entrar com a nova.
 
 ### Testes para a História 3 ⚠️
 
-- [ ] T042 [P] [US3] Teste de unidade: `SenhaProvisoriaGuard` nega com a claim e libera `@PermiteSenhaProvisoria()`, em `apps/api/src/auth/guards/senha-provisoria.guard.spec.ts` (FR-017)
-- [ ] T043 [P] [US3] Teste e2e (`lento`): o login de conta provisória informa que a senha é provisória (cenário 1); com ela, `me`, `refresh`, `logout` e `trocar-senha` respondem e toda outra rota dá 403 (cenário 2); `trocar-senha` sem token dá 401, em `apps/api/test/senha-provisoria.e2e-spec.ts` (FR-017)
-- [ ] T044 [P] [US3] Teste e2e (`lento`): a troca com a senha atual certa torna a senha definitiva, derruba as outras sessões, mantém a atual e libera as rotas (cenário 3), em `apps/api/test/senha-provisoria.e2e-spec.ts` (FR-018)
-- [ ] T045 [P] [US3] Teste e2e (`lento`): a troca é recusada com senha atual errada, nova curta, nova longa demais e nova igual à atual (cenário 4), em `apps/api/test/senha-provisoria.e2e-spec.ts` (FR-018)
+- [x] T042 [P] [US3] Teste de unidade: `SenhaProvisoriaGuard` nega com a claim e libera `@PermiteSenhaProvisoria()`, em `apps/api/src/auth/guards/senha-provisoria.guard.spec.ts` (FR-017)
+- [x] T043 [P] [US3] Teste e2e (`lento`): o login de conta provisória informa que a senha é provisória (cenário 1); com ela, `me`, `refresh`, `logout` e `trocar-senha` respondem e toda outra rota dá 403 (cenário 2); `trocar-senha` sem token dá 401, em `apps/api/test/senha-provisoria.e2e-spec.ts` (FR-017)
+- [x] T044 [P] [US3] Teste e2e (`lento`): a troca com a senha atual certa torna a senha definitiva, derruba as outras sessões, mantém a atual e libera as rotas (cenário 3), em `apps/api/test/senha-provisoria.e2e-spec.ts` (FR-018)
+- [x] T045 [P] [US3] Teste e2e (`lento`): a troca é recusada com senha atual errada, nova curta, nova longa demais e nova igual à atual (cenário 4), em `apps/api/test/senha-provisoria.e2e-spec.ts` (FR-018)
 
 ### Implementação da História 3
 
-- [ ] T046 [US3] `@PermiteSenhaProvisoria()` e `SenhaProvisoriaGuard` global, entre o `JwtAuthGuard` e o `RolesGuard`, em `apps/api/src/auth/`
-- [ ] T047 [US3] `POST /auth/trocar-senha` em `AuthService` e `AuthController`: confere a atual, aplica a política, revoga as outras famílias e emite sessão nova; regenerar `openapi.json` e os tipos (depende de T046)
-- [ ] T048 [US3] Front: `apps/web/app/(auth)/trocar-senha`, redirecionamento obrigatório quando a conta é provisória e a inicial de aluno (FR-020) (depende de T047)
-- [ ] T049 [US3] Validação manual: roteiro do teste independente e capturas da troca de senha e da inicial de aluno (FR-020)
+- [x] T046 [US3] `@PermiteSenhaProvisoria()` e `SenhaProvisoriaGuard` global, entre o `JwtAuthGuard` e o `RolesGuard`, em `apps/api/src/auth/`
+- [x] T047 [US3] `POST /auth/trocar-senha` em `AuthService` e `AuthController`: confere a atual, aplica a política, revoga as outras famílias e emite sessão nova; regenerar `openapi.json` e os tipos (depende de T046)
+- [x] T048 [US3] Front: `apps/web/app/(auth)/trocar-senha`, redirecionamento obrigatório quando a conta é provisória e a inicial de aluno (FR-020) (depende de T047)
+- [x] T049 [US3] Validação manual: roteiro do teste independente e capturas da troca de senha e da inicial de aluno (FR-020)
 
 **Checkpoint**: História 3 funcional; gate e e2e verdes.
 
@@ -192,3 +192,17 @@ Feitas num commit só: a base não tem como ser provada sem a primeira rota.
   criar professor passa a recusar e-mail fora do formato e nome vazio, com teste.
 - **Desvios do plano**: nenhum.
 - **Pendências**: a redefinição de senha na tela não foi exercitada à mão (coberta por e2e).
+
+### História 3 (2026-11-18)
+
+- **Feito**: T042 a T049. Unidade: 4 testes novos (23 no total); e2e: 11 testes em
+  `senha-provisoria.e2e-spec.ts` (56 no total), vistos falhar antes do código. Roteiro manual:
+  entrar com a provisória, ser levado à troca, tentar outra tela (volta à troca), erro de senha
+  curta, trocar e chegar à inicial de aluno.
+- **Desvio do plano**: a troca de senha derruba **todas** as sessões da conta e abre uma nova
+  para quem trocou, em vez de preservar a família atual. O efeito pedido é o mesmo (os outros
+  aparelhos saem, quem trocou segue logado) e dispensa saber a família a partir do token de acesso.
+- **Senha atual errada na troca responde 400**, não 401: 401 faria o front tentar renovar a
+  sessão.
+- **Capturas**: troca de senha em 1280px claro e inicial de aluno em 390px escuro.
+- **Pendências**: nenhuma.

@@ -15,8 +15,10 @@ export default function EntrarPage() {
 
   // Quem já está dentro não precisa ver esta tela.
   useEffect(() => {
-    if (sessao.situacao === 'autenticado') router.replace('/');
-  }, [sessao.situacao, router]);
+    if (sessao.situacao === 'autenticado') {
+      router.replace(sessao.usuario.senhaProvisoria ? '/trocar-senha' : '/');
+    }
+  }, [sessao, router]);
 
   const entrar = useMutation({
     mutationFn: async (credenciais: { email: string; senha: string }) => {

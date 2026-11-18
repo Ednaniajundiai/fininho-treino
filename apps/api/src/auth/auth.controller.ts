@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCookieAuth,
   ApiNoContentResponse,
@@ -24,9 +25,15 @@ import type { Request, Response } from 'express';
 import { ContaDto, paraContaDto } from '../usuarios/dto/conta.dto.js';
 import { AuthService } from './auth.service.js';
 import { COOKIE_DE_RENOVACAO, OPCOES_AO_GRAVAR, OPCOES_DO_COOKIE } from './cookie.js';
-import { Public, UsuarioAtual, type UsuarioAutenticado } from './decorators.js';
+import {
+  PermiteSenhaProvisoria,
+  Public,
+  UsuarioAtual,
+  type UsuarioAutenticado,
+} from './decorators.js';
 import { LoginDto } from './dto/login.dto.js';
 import { SessaoDto } from './dto/sessao.dto.js';
+import { TrocarSenhaDto } from './dto/trocar-senha.dto.js';
 import { LimiteDeLoginGuard } from './guards/limite-de-login.guard.js';
 import { type Sessao, SessoesService } from './sessoes.service.js';
 
@@ -94,6 +101,7 @@ export class AuthController {
     resposta.clearCookie(COOKIE_DE_RENOVACAO, OPCOES_DO_COOKIE);
   }
 
+  @PermiteSenhaProvisoria()
   @Get('me')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'A conta de quem está autenticado' })
@@ -101,6 +109,31 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Não autenticado.' })
   async me(@UsuarioAtual() usuario: UsuarioAutenticado): Promise<ContaDto> {
     return paraContaDto(await this.auth.minhaConta(usuario.id));
+  }
+
+  @PermiteSenhaProvisoria()
+  @Post('trocar-senha')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Trocar a senha (obrigatório para conta com senha provisória)',
+    description:
+      'A senha vira definitiva, as outras sessões da conta caem e a resposta traz uma sessão nova.',
+  })
+  @ApiOkResponse({ type: SessaoDto })
+  @ApiBadRequestResponse({
+    description: 'Senha atual incorreta, ou nova senha fora da política ou igual à atual.',
+  })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado.' })
+  async trocarSenha(
+    @UsuarioAtual() usuario: UsuarioAutenticado,
+    @Body() dto: TrocarSenhaDto,
+    @Res({ passthrough: true }) resposta: Response,
+  ): Promise<SessaoDto> {
+    return this.responderComSessao(
+      await this.auth.trocarSenha(usuario.id, dto.senhaAtual, dto.novaSenha),
+      resposta,
+    );
   }
 
   private responderComSessao(sessao: Sessao, resposta: Response): SessaoDto {

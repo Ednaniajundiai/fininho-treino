@@ -6,6 +6,7 @@ import { AuthService } from './auth.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { LimiteDeLoginGuard } from './guards/limite-de-login.guard.js';
 import { RolesGuard } from './guards/roles.guard.js';
+import { SenhaProvisoriaGuard } from './guards/senha-provisoria.guard.js';
 import { SessoesModule } from './sessoes.module.js';
 
 @Module({
@@ -18,8 +19,9 @@ import { SessoesModule } from './sessoes.module.js';
   providers: [
     AuthService,
     LimiteDeLoginGuard,
-    // Guards globais, nesta ordem: primeiro autentica, depois confere o papel.
+    // Guards globais, nesta ordem: autentica, barra quem está com senha provisória, confere o papel.
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: SenhaProvisoriaGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })

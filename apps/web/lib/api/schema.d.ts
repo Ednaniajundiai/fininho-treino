@@ -89,6 +89,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/trocar-senha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Trocar a senha (obrigatório para conta com senha provisória)
+         * @description A senha vira definitiva, as outras sessões da conta caem e a resposta traz uma sessão nova.
+         */
+        post: operations["AuthController_trocarSenha"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/alunos": {
         parameters: {
             query?: never;
@@ -154,6 +174,11 @@ export interface components {
             /** @description JWT de acesso, válido por 15 minutos. Guardar só em memória. */
             accessToken: string;
             usuario: components["schemas"]["ContaDto"];
+        };
+        TrocarSenhaDto: {
+            /** @description A senha atual (a provisória, no primeiro acesso). */
+            senhaAtual: string;
+            novaSenha: string;
         };
         CriarAlunoDto: {
             /** @example Ari Alves */
@@ -293,6 +318,43 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ContaDto"];
                 };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_trocarSenha: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrocarSenhaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessaoDto"];
+                };
+            };
+            /** @description Senha atual incorreta, ou nova senha fora da política ou igual à atual. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Não autenticado. */
             401: {

@@ -15,11 +15,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const sessao = useSessao();
 
+  // Conta com senha provisória só troca a senha (a API responde 403 em todo o resto).
+  const precisaTrocarSenha = sessao.situacao === 'autenticado' && sessao.usuario.senhaProvisoria;
+
   useEffect(() => {
     if (sessao.situacao === 'anonimo') router.replace('/entrar');
-  }, [sessao.situacao, router]);
+    if (precisaTrocarSenha) router.replace('/trocar-senha');
+  }, [sessao.situacao, precisaTrocarSenha, router]);
 
-  if (sessao.situacao !== 'autenticado') {
+  if (sessao.situacao !== 'autenticado' || precisaTrocarSenha) {
     return (
       <main className="flex flex-1 items-center justify-center text-muted-foreground">
         Carregando…

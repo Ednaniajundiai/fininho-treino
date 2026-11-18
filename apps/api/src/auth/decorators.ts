@@ -16,6 +16,13 @@ export const PAPEIS_PERMITIDOS = 'papeisPermitidos';
 /** Restringe a rota aos papéis listados; os demais recebem 403. */
 export const Roles = (...papeis: Role[]) => SetMetadata(PAPEIS_PERMITIDOS, papeis);
 
+export const PERMITE_SENHA_PROVISORIA = 'permiteSenhaProvisoria';
+/**
+ * Conta com senha provisória recebe 403 em toda rota, salvo as marcadas com este decorator:
+ * trocar a senha e consultar a própria conta (contrato autenticacao/C-02).
+ */
+export const PermiteSenhaProvisoria = () => SetMetadata(PERMITE_SENHA_PROVISORIA, true);
+
 export const UsuarioAtual = createParamDecorator(
   (_dado: unknown, contexto: ExecutionContext): UsuarioAutenticado =>
     contexto.switchToHttp().getRequest<{ usuario: UsuarioAutenticado }>().usuario,

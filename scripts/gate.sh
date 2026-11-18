@@ -6,10 +6,15 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 # O pnpm instalado com "npm install -g" fica na pasta global do npm, que nem sempre está no
-# PATH do shell que roda o hook.
+# PATH do shell que roda o hook. A consulta ao npm roda fora do projeto: dentro dele o npm
+# recusa o Node declarado em devEngines (quem baixa esse Node é o pnpm).
 if ! command -v pnpm >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
-  PATH="$PATH:$(npm config get prefix)"
-  export PATH
+  prefixo="$(cd "${TMPDIR:-/tmp}" && npm config get prefix 2>/dev/null || true)"
+  if [ -n "$prefixo" ]; then
+    if command -v cygpath >/dev/null 2>&1; then prefixo="$(cygpath -u "$prefixo")"; fi
+    PATH="$PATH:$prefixo:$prefixo/bin"
+    export PATH
+  fi
 fi
 
 if [ ! -f package.json ]; then

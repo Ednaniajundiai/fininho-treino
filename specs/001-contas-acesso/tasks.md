@@ -15,20 +15,20 @@ História 1 e entra no commit dela.
 
 ## Fase 1: Setup (Infraestrutura Compartilhada)
 
-- [ ] T001 Ativar o pnpm via `corepack` e conferir a versão do Node contra o `engines` do Prisma 7.10.1; registrar o resultado no `ESTADO.md` se bloquear (D-07)
-- [ ] T002 Criar a raiz do monorepo: `package.json` (scripts `dev`, `lint`, `typecheck`, `test`, `build`, `format`, `packageManager`), `pnpm-workspace.yaml`, `.nvmrc`, `.env.example` (depende de T001)
-- [ ] T003 Criar `apps/api` com NestJS 12, TypeScript `strict`, Vitest, padrão do esqueleto (D-15; script `test` só unidade, `test:e2e` para `*.e2e-spec.ts`) (depende de T002)
-- [ ] T004 [P] Criar `apps/web` com Next.js (App Router), Tailwind, shadcn/ui com os tokens do `~/.claude/DESIGN.base.md` e TanStack Query (depende de T002)
-- [ ] T005 [P] Configurar lint (oxlint na API, ESLint do Next no front) e Prettier compartilhado na raiz, com `lint` e `typecheck` em cada app (depende de T003, T004)
-- [ ] T006 [P] Criar `docker-compose.yml` (Postgres com volume) e `scripts/postgres-init.sql` (cria o banco `fininho_treino_test`) (FR-001)
+- [x] T001 Ativar o pnpm via `corepack` e conferir a versão do Node contra o `engines` do Prisma 7.10.1; registrar o resultado no `ESTADO.md` se bloquear (D-07)
+- [x] T002 Criar a raiz do monorepo: `package.json` (scripts `dev`, `lint`, `typecheck`, `test`, `build`, `format`, `packageManager`), `pnpm-workspace.yaml`, `.nvmrc`, `.env.example` (depende de T001)
+- [x] T003 Criar `apps/api` com NestJS 12, TypeScript `strict`, Vitest, padrão do esqueleto (D-15; script `test` só unidade, `test:e2e` para `*.e2e-spec.ts`) (depende de T002)
+- [x] T004 [P] Criar `apps/web` com Next.js (App Router), Tailwind, shadcn/ui com os tokens do `~/.claude/DESIGN.base.md` e TanStack Query (depende de T002)
+- [x] T005 [P] Configurar lint (oxlint na API, ESLint do Next no front) e Prettier compartilhado na raiz, com `lint` e `typecheck` em cada app (depende de T003, T004)
+- [x] T006 [P] Criar `docker-compose.yml` (Postgres com volume) e `scripts/postgres-init.sql` (cria o banco `fininho_treino_test`) (FR-001)
 
 ## Fase 2: Fundação (Bloqueante)
 
-- [ ] T007 Configurar o Prisma 7.10.1 em `apps/api` (`prisma/schema.prisma`, `PrismaModule`, `PrismaService` em `apps/api/src/prisma/`), conferindo configuração e adaptador na doc oficial (depende de T003, T006)
-- [ ] T008 Modelar `users` e `refresh_tokens` em `apps/api/prisma/schema.prisma` e gerar a primeira migration, com o `CHECK` de aluno/professor escrito à mão (D-01, D-12, D-13) (depende de T007)
-- [ ] T009 Montar `apps/api/src/main.ts` e `app.module.ts`: prefixo `/api`, `ValidationPipe` global com `whitelist`, `cookie-parser`, `trust proxy`, `ConfigModule` com validação das variáveis, Swagger em `/api/docs` (depende de T007)
-- [ ] T010 Criar o suporte de e2e em `apps/api/test/`: `globalSetup` que aplica as migrations do zero no banco de teste (`lento`), utilitário de limpeza das tabelas, fábricas de contas fictícias `*@exemplo.test` e um teste e2e de que o banco recusa aluno sem professor e professor com professor (`apps/api/test/migration.e2e-spec.ts`) (depende de T008, T009)
-- [ ] T011 [P] Criar `.github/workflows/ci.yml`: Node 24, Postgres como service container, lint, formatação, tipos, unidade, e2e, build e a checagem de deriva do OpenAPI (FR-002, D-14) (depende de T005)
+- [x] T007 Configurar o Prisma 7.10.1 em `apps/api` (`prisma/schema.prisma`, `PrismaModule`, `PrismaService` em `apps/api/src/prisma/`), conferindo configuração e adaptador na doc oficial (depende de T003, T006)
+- [x] T008 Modelar `users` e `refresh_tokens` em `apps/api/prisma/schema.prisma` e gerar a primeira migration, com o `CHECK` de aluno/professor escrito à mão (D-01, D-12, D-13) (depende de T007)
+- [x] T009 Montar `apps/api/src/main.ts` e `app.module.ts`: prefixo `/api`, `ValidationPipe` global com `whitelist`, `cookie-parser`, `trust proxy`, `ConfigModule` com validação das variáveis, Swagger em `/api/docs` (depende de T007)
+- [x] T010 Criar o suporte de e2e em `apps/api/test/`: `globalSetup` que aplica as migrations do zero no banco de teste (`lento`), utilitário de limpeza das tabelas, fábricas de contas fictícias `*@exemplo.test` e um teste e2e de que o banco recusa aluno sem professor e professor com professor (`apps/api/test/migration.e2e-spec.ts`) (depende de T008, T009)
+- [x] T011 [P] Criar `.github/workflows/ci.yml`: Node 24, Postgres como service container, lint, formatação, tipos, unidade, e2e, build e a checagem de deriva do OpenAPI (FR-002, D-14) (depende de T005)
 
 **Checkpoint**: `docker compose up -d`, migration aplicada, API sobe e a suíte vazia passa.
 
@@ -45,29 +45,29 @@ sair.
 
 ### Testes para a História 1 ⚠️
 
-- [ ] T012 [P] [US1] Teste de unidade: normalização de e-mail e política de senha (8 a 128) em `apps/api/src/usuarios/senha.spec.ts` e `email.spec.ts` (FR-014, FR-018)
-- [ ] T013 [P] [US1] Teste de unidade: decisão da rotação (válido, vencido, já usado, revogado) e hash do token em `apps/api/src/auth/tokens.spec.ts` (FR-007, FR-008)
-- [ ] T014 [P] [US1] Teste de unidade: `JwtAuthGuard` nega sem token, com token inválido e vencido, e libera `@Public()` em `apps/api/src/auth/guards/jwt-auth.guard.spec.ts` (FR-010)
-- [ ] T015 [P] [US1] Teste e2e (`lento`): CLI cria professor com senha definitiva (cenário 1); recusa professor existente sem `--redefinir`; com `--redefinir` troca a senha e derruba as sessões (cenário 2); recusa e-mail de aluno, em `apps/api/test/cli.e2e-spec.ts` (FR-003, FR-004)
-- [ ] T016 [P] [US1] Teste e2e (`lento`): login correto devolve token e conta (cenário 3); e-mail inexistente e senha errada dão a mesma resposta (cenário 4); a senha e o hash nunca aparecem na resposta e o hash gravado é argon2id, em `apps/api/test/auth-login.e2e-spec.ts` (FR-005, FR-019)
-- [ ] T017 [P] [US1] Teste e2e (`lento`): 6ª tentativa de login em um minuto recebe 429 e a conta não fica bloqueada: a mesma conta entra a partir de outra origem (cenário 5), em `apps/api/test/auth-login.e2e-spec.ts` (FR-006)
-- [ ] T018 [P] [US1] Teste e2e (`lento`): renovação gira o token e o anterior deixa de valer (cenário 6); token vencido dá 401; reuso de token girado derruba a família inteira e não outra família (cenário 8); atributos do cookie (`httpOnly`, `Secure`, `SameSite=Strict`, `Path`), em `apps/api/test/auth-sessao.e2e-spec.ts` (FR-007, FR-008)
-- [ ] T019 [P] [US1] Teste e2e (`lento`): logout revoga só a sessão do aparelho e a outra segue renovando (cenário 7); o logout funciona só com o cookie, sem token de acesso, e sem cookie responde sem erro e sem efeito, em `apps/api/test/auth-sessao.e2e-spec.ts` (FR-009, FR-010)
-- [ ] T020 [P] [US1] Teste e2e (`lento`): `GET /api/health` responde sem token; `GET /api/auth/me` dá 401 sem token e com token inválido, e devolve a conta com token válido (cenário 9), em `apps/api/test/health.e2e-spec.ts` e `auth-me.e2e-spec.ts` (FR-010, FR-011)
+- [x] T012 [P] [US1] Teste de unidade: normalização de e-mail e política de senha (8 a 128) em `apps/api/src/usuarios/senha.spec.ts` e `email.spec.ts` (FR-014, FR-018)
+- [x] T013 [P] [US1] Teste de unidade: decisão da rotação (válido, vencido, já usado, revogado) e hash do token em `apps/api/src/auth/tokens.spec.ts` (FR-007, FR-008)
+- [x] T014 [P] [US1] Teste de unidade: `JwtAuthGuard` nega sem token, com token inválido e vencido, e libera `@Public()` em `apps/api/src/auth/guards/jwt-auth.guard.spec.ts` (FR-010)
+- [x] T015 [P] [US1] Teste e2e (`lento`): CLI cria professor com senha definitiva (cenário 1); recusa professor existente sem `--redefinir`; com `--redefinir` troca a senha e derruba as sessões (cenário 2); recusa e-mail de aluno, em `apps/api/test/cli.e2e-spec.ts` (FR-003, FR-004)
+- [x] T016 [P] [US1] Teste e2e (`lento`): login correto devolve token e conta (cenário 3); e-mail inexistente e senha errada dão a mesma resposta (cenário 4); a senha e o hash nunca aparecem na resposta e o hash gravado é argon2id, em `apps/api/test/auth-login.e2e-spec.ts` (FR-005, FR-019)
+- [x] T017 [P] [US1] Teste e2e (`lento`): 6ª tentativa de login em um minuto recebe 429 e a conta não fica bloqueada: a mesma conta entra a partir de outra origem (cenário 5), em `apps/api/test/auth-login.e2e-spec.ts` (FR-006)
+- [x] T018 [P] [US1] Teste e2e (`lento`): renovação gira o token e o anterior deixa de valer (cenário 6); token vencido dá 401; reuso de token girado derruba a família inteira e não outra família (cenário 8); atributos do cookie (`httpOnly`, `Secure`, `SameSite=Strict`, `Path`), em `apps/api/test/auth-sessao.e2e-spec.ts` (FR-007, FR-008)
+- [x] T019 [P] [US1] Teste e2e (`lento`): logout revoga só a sessão do aparelho e a outra segue renovando (cenário 7); o logout funciona só com o cookie, sem token de acesso, e sem cookie responde sem erro e sem efeito, em `apps/api/test/auth-sessao.e2e-spec.ts` (FR-009, FR-010)
+- [x] T020 [P] [US1] Teste e2e (`lento`): `GET /api/health` responde sem token; `GET /api/auth/me` dá 401 sem token e com token inválido, e devolve a conta com token válido (cenário 9), em `apps/api/test/health.e2e-spec.ts` e `auth-me.e2e-spec.ts` (FR-010, FR-011)
 
 ### Implementação da História 1
 
-- [ ] T021 [P] [US1] `HealthModule` com `GET /health` pública em `apps/api/src/health/` (FR-001)
-- [ ] T022 [US1] `apps/api/src/usuarios/`: normalização de e-mail, política de senha, hash argon2id e `UsuariosService.criarProfessor` / `redefinirSenhaProfessor` (depende de T008)
-- [ ] T023 [US1] `apps/api/src/auth/`: emissão do JWT, token de renovação opaco com SHA-256, rotação atômica e revogação por família (`tokens.service.ts`) (depende de T008)
-- [ ] T024 [US1] `AuthService` e `AuthController`: `login` (com verificação argon2 de equalização e `@Throttle`), `refresh`, `logout`, `me`, DTOs com Swagger (depende de T022, T023)
-- [ ] T025 [US1] Decorators `@Public()`, `@Roles()`, `@UsuarioAtual()` e os guards globais `ThrottlerGuard`, `JwtAuthGuard` e `RolesGuard` registrados em `app.module.ts` (depende de T024)
-- [ ] T026 [US1] CLI `apps/api/src/cli/criar-professor.ts` com leitura da senha sem eco e `--redefinir`, e o script `cli` no `package.json` da API (depende de T022)
-- [ ] T027 [US1] Script `apps/api/src/openapi.ts` que grava `apps/api/openapi.json`, e geração dos tipos em `apps/web/lib/api/schema.d.ts` (`pnpm gen:api`) (depende de T024)
-- [ ] T028 [US1] Front: rewrite de `/api` em `apps/web/next.config.ts`, cliente `openapi-fetch`, sessão em memória com renovação single-flight em `apps/web/lib/api/` (depende de T027)
-- [ ] T029 [US1] Front: tela `apps/web/app/(auth)/entrar`, layout protegido `app/(app)/` com a inicial de professor e o botão de sair (FR-020) (depende de T028)
-- [ ] T030 [US1] `README.md`: comandos do clone ao primeiro login (FR-001, SC-001)
-- [ ] T031 [US1] Validação manual: roteiro do teste independente no navegador e capturas da tela de entrar e da inicial (390px e 1280px, claro e escuro) contra o `DESIGN.base.md` (FR-020)
+- [x] T021 [P] [US1] `HealthModule` com `GET /health` pública em `apps/api/src/health/` (FR-001)
+- [x] T022 [US1] `apps/api/src/usuarios/`: normalização de e-mail, política de senha, hash argon2id e `UsuariosService.criarProfessor` / `redefinirSenhaProfessor` (depende de T008)
+- [x] T023 [US1] `apps/api/src/auth/`: emissão do JWT, token de renovação opaco com SHA-256, rotação atômica e revogação por família (`tokens.service.ts`) (depende de T008)
+- [x] T024 [US1] `AuthService` e `AuthController`: `login` (com verificação argon2 de equalização e `@Throttle`), `refresh`, `logout`, `me`, DTOs com Swagger (depende de T022, T023)
+- [x] T025 [US1] Decorators `@Public()`, `@Roles()`, `@UsuarioAtual()` e os guards globais `ThrottlerGuard`, `JwtAuthGuard` e `RolesGuard` registrados em `app.module.ts` (depende de T024)
+- [x] T026 [US1] CLI `apps/api/src/cli/criar-professor.ts` com leitura da senha sem eco e `--redefinir`, e o script `cli` no `package.json` da API (depende de T022)
+- [x] T027 [US1] Script `apps/api/src/openapi.ts` que grava `apps/api/openapi.json`, e geração dos tipos em `apps/web/lib/api/schema.d.ts` (`pnpm gen:api`) (depende de T024)
+- [x] T028 [US1] Front: rewrite de `/api` em `apps/web/next.config.ts`, cliente `openapi-fetch`, sessão em memória com renovação single-flight em `apps/web/lib/api/` (depende de T027)
+- [x] T029 [US1] Front: tela `apps/web/app/(auth)/entrar`, layout protegido `app/(app)/` com a inicial de professor e o botão de sair (FR-020) (depende de T028)
+- [x] T030 [US1] `README.md`: comandos do clone ao primeiro login (FR-001, SC-001)
+- [x] T031 [US1] Validação manual: roteiro do teste independente no navegador e capturas da tela de entrar e da inicial (390px e 1280px, claro e escuro) contra o `DESIGN.base.md` (FR-020)
 
 **Checkpoint**: História 1 funcional; gate e e2e verdes.
 
@@ -155,3 +155,29 @@ aluno; sair e entrar com a nova.
 - Histórias 1 e 3 e a migration (T008) são críticas (autenticação, autorização, migration):
   modelo mais capaz.
 - Um commit por história, com a prova do gate e do e2e.
+
+## Registro de execução
+
+### Setup, Fundação e História 1 (2026-11-17)
+
+Feitas num commit só: a base não tem como ser provada sem a primeira rota.
+
+- **Feito**: T001 a T031. Unidade: 16 testes; e2e: 27 testes (5 arquivos); gate, build e
+  formatação verdes; roteiro manual no navegador (erro de login, entrar, recarregar, sair).
+- **Desvios do plano**:
+  - Vitest e oxlint na API no lugar de Jest e ESLint (D-15, exceção aprovada pelo dono).
+  - Node 24 baixado pelo pnpm para o projeto (`devEngines.runtime`), em vez de instalado na
+    máquina; o `corepack` desta máquina não roda o pnpm 12, então o pnpm veio por
+    `npm install -g`.
+  - O limite de login usa um guard aplicado só na rota de login, não um `ThrottlerGuard`
+    global: mesmo efeito, sem tocar as outras rotas.
+  - Componentes de interface escritos à mão no padrão shadcn/ui: o `shadcn init` 4.23 não
+    reconhece o Tailwind 4 do esqueleto do Next 16.
+  - `cacheComponents` e `partialPrefetching` do esqueleto do Next foram desligados: as telas
+    dependem de login no navegador e o recurso acusava erro em toda página protegida.
+  - TypeScript 6 na API e 5 no front (o que cada esqueleto oficial fixa), não o 7.
+- **Honestidade sobre "teste primeiro"**: os testes foram escritos antes do código, mas código e
+  testes rodaram juntos pela primeira vez; eu não vi cada teste falhar antes de passar.
+- **Capturas**: entrar e inicial conferidas em 390px claro e 1280px escuro. As combinações
+  390px escuro e 1280px claro não foram captadas.
+- **Pendências**: nenhuma que bloqueie a História 2.

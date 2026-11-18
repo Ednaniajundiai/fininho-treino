@@ -1,0 +1,250 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "HealthController_verificar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaudeDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Verificação de saúde (pública)",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "E-mail ou senha inválidos (mesma resposta nos dois casos)."
+          },
+          "429": {
+            "description": "Mais de 5 tentativas em um minuto da mesma origem."
+          }
+        },
+        "summary": "Entrar com e-mail e senha",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessaoDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sem cookie, ou token inválido, vencido ou já usado."
+          }
+        },
+        "security": [
+          {
+            "ft_refresh": []
+          }
+        ],
+        "summary": "Renovar a sessão (gira o token de renovação do cookie)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "ft_refresh": []
+          }
+        ],
+        "summary": "Sair: revoga a sessão deste aparelho",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContaDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "A conta de quem está autenticado",
+        "tags": [
+          "auth"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "fininho-treino",
+    "description": "API de fichas de treino: contas, acesso, fichas e sessões.",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "SaudeDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "paula@exemplo.test"
+          },
+          "senha": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "senha"
+        ]
+      },
+      "Papel": {
+        "type": "string",
+        "enum": [
+          "PROFESSOR",
+          "ALUNO"
+        ]
+      },
+      "ContaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string",
+            "example": "Paula Prado"
+          },
+          "email": {
+            "type": "string",
+            "example": "paula@exemplo.test"
+          },
+          "papel": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Papel"
+              }
+            ]
+          },
+          "senhaProvisoria": {
+            "type": "boolean",
+            "description": "Verdadeiro enquanto a conta não trocou a senha provisória."
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "email",
+          "papel",
+          "senhaProvisoria"
+        ]
+      },
+      "SessaoDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "JWT de acesso, válido por 15 minutos. Guardar só em memória."
+          },
+          "usuario": {
+            "$ref": "#/components/schemas/ContaDto"
+          }
+        },
+        "required": [
+          "accessToken",
+          "usuario"
+        ]
+      }
+    }
+  }
+}

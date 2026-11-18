@@ -30,3 +30,13 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Cliente Prisma gerado (prisma generate)
+apps/api/src/generated/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Servidores de pré-visualização do Claude Code (caminhos locais)
+.claude/launch.json

@@ -5,6 +5,13 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
+# O pnpm instalado com "npm install -g" fica na pasta global do npm, que nem sempre está no
+# PATH do shell que roda o hook.
+if ! command -v pnpm >/dev/null 2>&1 && command -v npm >/dev/null 2>&1; then
+  PATH="$PATH:$(npm config get prefix)"
+  export PATH
+fi
+
 if [ ! -f package.json ]; then
   echo "gate: monorepo ainda não criado (feature 001); nada a verificar."
   exit 0

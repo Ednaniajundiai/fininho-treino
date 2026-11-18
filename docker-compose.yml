@@ -1,0 +1,23 @@
+# Ambiente de desenvolvimento: só o Postgres. API e web rodam no host (pnpm dev).
+name: fininho-treino
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-fininho_treino}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev-apenas-local}
+      POSTGRES_DB: ${POSTGRES_DB:-fininho_treino}
+    ports:
+      - '127.0.0.1:5450:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:

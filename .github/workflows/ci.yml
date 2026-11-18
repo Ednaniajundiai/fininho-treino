@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: fininho_treino
+          POSTGRES_PASSWORD: ci-apenas
+          POSTGRES_DB: fininho_treino_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fininho_treino -d fininho_treino_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      # Valores só da CI, sem segredo real: o banco nasce e morre com o job.
+      DATABASE_URL: postgresql://fininho_treino:ci-apenas@127.0.0.1:5432/fininho_treino_test
+      DATABASE_URL_TEST: postgresql://fininho_treino:ci-apenas@127.0.0.1:5432/fininho_treino_test
+      JWT_ACCESS_SECRET: segredo-apenas-da-ci-com-mais-de-32-caracteres
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Formatação
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Tipos
+        run: pnpm typecheck
+
+      - name: Testes de unidade
+        run: pnpm test
+
+      - name: Testes e2e (API)
+        run: pnpm --filter api test:e2e
+
+      - name: Contrato OpenAPI sem deriva
+        run: |
+          pnpm gen:api
+          git diff --exit-code -- apps/api/openapi.json apps/web/lib/api/schema.d.ts
+
+      - name: Build
+        run: pnpm build

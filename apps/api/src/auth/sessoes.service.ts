@@ -51,6 +51,7 @@ export class SessoesService {
         where: { tokenHash: hashDoToken(valor) },
       });
       if (!token) return null;
+      await this.travarSessoesDaConta(token.userId, tx);
 
       let decisao = decidirRotacao(token, agora);
       if (decisao === 'VALIDO') {
@@ -74,28 +75,33 @@ export class SessoesService {
 
   /** Logout: encerra o login do aparelho que apresentou o token. Token desconhecido: nada a fazer. */
   async encerrar(valor: string): Promise<void> {
-    const token = await this.prisma.refreshToken.findUnique({
-      where: { tokenHash: hashDoToken(valor) },
+    await this.prisma.$transaction(async (tx) => {
+      const token = await tx.refreshToken.findUnique({
+        where: { tokenHash: hashDoToken(valor) },
+      });
+      if (!token) return;
+      await this.travarSessoesDaConta(token.userId, tx);
+      await this.revogarFamilia(token.familyId, tx);
     });
-    if (token) await this.revogarFamilia(token.familyId, this.prisma);
+  }
+
+  /** Derruba todas as sessões de uma conta (troca ou redefinição de senha), dentro da transação de quem chama. */
+  async revogarDoUsuario(userId: string, opcoes: { tx: Prisma.TransactionClient }): Promise<void> {
+    await this.travarSessoesDaConta(userId, opcoes.tx);
+    await opcoes.tx.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
   }
 
   /**
-   * Derruba as sessões de uma conta (troca ou redefinição de senha). `excetoFamilia` preserva o
-   * login de quem está fazendo a troca. Aceita o cliente de uma transação em curso.
+   * Um escritor por conta: renovação, logout e revogação da mesma conta rodam em fila (trava
+   * do Postgres que dura até o fim da transação). Sem isso, uma revogação poderia confirmar
+   * antes de uma renovação simultânea gravar o token novo, que sobreviveria a ela.
    */
-  async revogarDoUsuario(
-    userId: string,
-    opcoes: { excetoFamilia?: string; tx?: Prisma.TransactionClient } = {},
-  ): Promise<void> {
-    await (opcoes.tx ?? this.prisma).refreshToken.updateMany({
-      where: {
-        userId,
-        revokedAt: null,
-        ...(opcoes.excetoFamilia ? { familyId: { not: opcoes.excetoFamilia } } : {}),
-      },
-      data: { revokedAt: new Date() },
-    });
+  private async travarSessoesDaConta(userId: string, tx: Prisma.TransactionClient): Promise<void> {
+    // O ::text é só porque o Prisma não lê o retorno void da função.
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${userId}))::text`;
   }
 
   private async revogarFamilia(familyId: string, db: Prisma.TransactionClient): Promise<void> {

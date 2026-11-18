@@ -35,6 +35,8 @@ export default function AlunosPage() {
       if (!data) throw new Error(mensagemDeErro(error, 'Não foi possível criar o aluno.'));
       return data;
     },
+    // A resposta traz a senha provisória: não fica no cache de mutações depois de usada.
+    gcTime: 0,
     onSuccess: async ({ aluno, senhaProvisoria }) => {
       setSenhaMostrada({ ...aluno, senha: senhaProvisoria, motivo: 'criada' });
       await queryClient.invalidateQueries({ queryKey: ['alunos'] });
@@ -49,6 +51,7 @@ export default function AlunosPage() {
       if (!data) throw new Error(mensagemDeErro(error, 'Não foi possível redefinir a senha.'));
       return data;
     },
+    gcTime: 0,
     onSuccess: async ({ aluno, senhaProvisoria }) => {
       setSenhaMostrada({ ...aluno, senha: senhaProvisoria, motivo: 'redefinida' });
       await queryClient.invalidateQueries({ queryKey: ['alunos'] });
@@ -63,6 +66,19 @@ export default function AlunosPage() {
       { nome: String(campos.get('nome')), email: String(campos.get('email')) },
       { onSuccess: () => formulario.reset() },
     );
+  }
+
+  function esquecerSenhaMostrada() {
+    setSenhaMostrada(null);
+    criar.reset();
+    redefinir.reset();
+  }
+
+  function confirmarRedefinicao(aluno: Conta) {
+    const confirmou = window.confirm(
+      `Gerar nova senha provisória para ${aluno.nome}? A senha atual deixa de valer e as sessões abertas dessa conta são encerradas.`,
+    );
+    if (confirmou) redefinir.mutate(aluno);
   }
 
   return (
@@ -86,7 +102,7 @@ export default function AlunosPage() {
           <Aviso tom="atencao" className="mt-4">
             Anote agora e passe ao aluno. Ela não aparece de novo; se perder, redefina a senha.
           </Aviso>
-          <Button variant="secondary" className="mt-4" onClick={() => setSenhaMostrada(null)}>
+          <Button variant="secondary" className="mt-4" onClick={esquecerSenhaMostrada}>
             Já anotei
           </Button>
         </Card>
@@ -154,7 +170,7 @@ export default function AlunosPage() {
                   <Button
                     variant="ghost"
                     disabled={redefinir.isPending}
-                    onClick={() => redefinir.mutate(aluno)}
+                    onClick={() => confirmarRedefinicao(aluno)}
                   >
                     <KeyRound size={18} strokeWidth={1.5} aria-hidden />
                     Redefinir senha

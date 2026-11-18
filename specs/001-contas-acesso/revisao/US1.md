@@ -1,3 +1,81 @@
+APROVADO: 0 bloqueantes
+
+# Rodada 2 (2026-11-18)
+
+**Escopo**: a correção `cf19307` (`git show cf19307`): `apps/api/src/auth/sessoes.service.ts`,
+`apps/api/test/auth-sessao.e2e-spec.ts` e `apps/web/lib/api/cliente.ts`. Revisão feita lendo o
+código e os testes, sem rodar a suíte e2e (o banco de teste está em uso por outra frente). Pela
+regra das duas rodadas, esta confere só os bloqueantes da rodada 1 e o que o diff introduziu.
+
+## B1: corrida na rotação do token. **Resolvido**
+
+`sessoes.service.ts:47-73`: leitura, marca de uso, revogação por reuso e emissão do token novo
+rodam numa só `$transaction` interativa (READ COMMITTED, o padrão). Conferido nos dois
+entrelaçamentos do mesmo token T1:
+
+- B lê T1 antes de A confirmar: o `UPDATE ... WHERE used_at IS NULL` de B espera o bloqueio de
+  linha de A, reavalia depois do commit, recebe `count = 0` e vira REUSO. O `UPDATE` da
+  revogação é um comando novo, com foto tirada depois do commit de A, e por isso enxerga e
+  revoga o T2.
+- B lê T1 depois de A confirmar: `decidirRotacao` já dá REUSO e a revogação também vê o T2.
+
+A revogação é confirmada junto com a transação: o `UnauthorizedException` é lançado fora dela
+(`:71`), então o 401 não desfaz a revogação. `abrir`, `encerrar` e `emitir` passaram a receber o
+cliente explicitamente, sem mudança de comportamento. Teste novo:
+`auth-sessao.e2e-spec.ts:115` (duas renovações em `Promise.all`; no máximo uma 200, o cookie
+emitido não renova, nenhum token vivo no banco).
+
+## B2: prazos do FR-007 sem teste. **Resolvido**
+
+`auth-sessao.e2e-spec.ts:90`: decodifica o JWT e afirma `exp - iat === 900` no login e na
+renovação; afirma o `expiresAt` do token mais novo a 7 dias (tolerância de 1 min) no login e,
+depois de envelhecer o token atual para 1 min, de novo 7 dias após a renovação. Um código que
+copiasse o prazo antigo (janela fixa) ou emitisse JWT sem `exp` falharia. Cenário 6 e FR-007
+passam a ter cobertura completa.
+
+## M1 e M2 da rodada 1 (`apps/web/lib/api/cliente.ts`). **Resolvidas**
+
+A repetição só pula `login`, `refresh` e `logout` (`:46`), então `/api/auth/me` e a futura troca
+de senha renovam depois de 401. A cópia é feita com `request.clone()` no `onRequest` (`:53`),
+com o corpo intacto, e removida no `onResponse` e no `onError` (o `openapi-fetch@0.17.0` fixado
+fornece `id` e `onError`). A repetição usa o `fetch` global, que não passa pelo middleware: não
+há laço, e o cabeçalho `X-Repetida` deixou de ser necessário. A validação manual de um POST com
+corpo depois de o acesso vencer continua recomendada.
+
+## Bloqueantes
+
+Nenhum.
+
+## Melhorias novas
+
+- **M11** `sessoes.service.ts:63` e `:101-106` (risco residual da mesma família do B1, não
+  introduzido pelo diff): a transação resolve o mesmo token apresentado duas vezes, mas não o
+  caso em que um token **antigo** (já girado) chega enquanto outra requisição gira o token
+  **atual** da mesma família. Em READ COMMITTED, o `UPDATE` da revogação não enxerga a linha T3
+  que a outra transação ainda não confirmou (só reavalia linhas que já existiam na foto), e o T3
+  sobrevive. É justamente o caso do roubo (ladrão gira o atual, vítima reapresenta o antigo), mas
+  a janela é a duração da transação, de milissegundos. O mesmo vale para `encerrar` (logout) e
+  `revogarDoUsuario` (redefinição de senha) concorrentes com uma renovação da mesma conta.
+  *Correção sugerida*: logo depois do `findUnique`, travar a família inteira com
+  `SELECT id FROM refresh_tokens WHERE family_id = $1 FOR UPDATE` (ou
+  `pg_advisory_xact_lock(hashtext(family_id))`), o que serializa as rotações da família; ou
+  rodar a transação em `Serializable` com nova tentativa. Decisão do dono: corrigir agora ou
+  registrar nos Riscos do plan.
+- **M12** `auth-sessao.e2e-spec.ts:115`: o teste de corrida não discrimina (o próprio commit
+  registra que ele passou no código antigo em três execuções). Não é teste enfraquecido, e a
+  garantia está na estrutura (transação), como pedem os princípios. Vale registrar isso no
+  comentário do teste, para ninguém tomá-lo como prova da correção.
+- **M13** Registro: o commit `cf19307` cita "44 testes e2e passando", o mesmo total do commit da
+  História 2. O número de `cf19307` provavelmente inclui o `alunos.e2e-spec.ts`, que estava no
+  worktree sem rastreamento. Sem efeito no código; só a prova do commit fica imprecisa.
+
+As melhorias M3 a M10 da rodada 1 seguem como estavam, salvo M3 (validação no comando) e M9
+(texto da inicial por papel), tratadas no commit da História 2 (`91934e8`).
+
+---
+
+# Rodada 1
+
 REPROVADO: 2 bloqueantes
 
 # Revisão: História 1, com Setup e Fundação (001-contas-acesso)

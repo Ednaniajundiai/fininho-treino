@@ -48,6 +48,7 @@ describe('contas de aluno: /api/alunos', () => {
         senhaProvisoria: true,
       });
       expect(resposta.body.senhaProvisoria).toEqual(expect.any(String));
+      expect(Object.keys(resposta.body).sort()).toEqual(['aluno', 'senhaProvisoria']);
 
       const noBanco = await prisma.user.findUniqueOrThrow({ where: { email: ARI.email } });
       const professora = await prisma.user.findUniqueOrThrow({ where: { email: PAULA.email } });
@@ -88,6 +89,18 @@ describe('contas de aluno: /api/alunos', () => {
       expect(repetido.body.message).toBe('E-mail já cadastrado.');
       expect(deProfessor.status).toBe(409);
       expect(await prisma.user.count({ where: { role: 'ALUNO' } })).toBe(1);
+    });
+
+    it('não aceita o professor no corpo: o vínculo vem só de quem está logado (FR-012)', async () => {
+      const outro = await prisma.user.findUniqueOrThrow({ where: { email: CAIO.email } });
+
+      const resposta = await http()
+        .post('/api/alunos')
+        .set('Authorization', `Bearer ${paula}`)
+        .send({ ...ARI, teacherId: outro.id });
+
+      expect(resposta.status).toBe(400);
+      expect(await prisma.user.count({ where: { role: 'ALUNO' } })).toBe(0);
     });
 
     it('recusa nome vazio ou e-mail inválido com 400', async () => {

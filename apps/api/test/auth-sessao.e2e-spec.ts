@@ -117,6 +117,8 @@ describe('sessão de acesso: renovação e logout', () => {
 
     const respostas = await Promise.all([renovar(cookie), renovar(cookie)]);
 
+    // Este teste não distingue sozinho o código com e sem transação (a janela da corrida é de
+    // milissegundos): a garantia é a transação com trava por conta em SessoesService.renovar.
     // No máximo uma passa; a outra é reuso e revoga a família, inclusive o token recém-emitido.
     expect(respostas.filter((resposta) => resposta.status === 200).length).toBeLessThanOrEqual(1);
     for (const resposta of respostas) {

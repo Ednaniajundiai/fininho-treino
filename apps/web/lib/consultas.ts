@@ -67,6 +67,52 @@ export function useAtivarFicha() {
   });
 }
 
+/** Arquiva a ficha (FR-010); se era a ativa, o aluno fica sem ficha ativa. */
+export function useArquivarFicha() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await api.POST('/api/fichas/{id}/arquivar', {
+        params: { path: { id } },
+      });
+      if (!data) throw new Error(mensagemDeErro(error, 'Não foi possível arquivar a ficha.'));
+      return data;
+    },
+    onSuccess: async (ficha) => {
+      queryClient.setQueryData(['ficha', ficha.id], ficha);
+      await queryClient.invalidateQueries({ queryKey: ['fichas', ficha.alunoId] });
+    },
+  });
+}
+
+/** Cria uma cópia em rascunho para o aluno escolhido (FR-010). */
+export function useDuplicarFicha() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, alunoId }: { id: string; alunoId: string }) => {
+      const { data, error } = await api.POST('/api/fichas/{id}/duplicar', {
+        params: { path: { id } },
+        body: { alunoId },
+      });
+      if (!data) throw new Error(mensagemDeErro(error, 'Não foi possível duplicar a ficha.'));
+      return data;
+    },
+    onSuccess: async (copia) => {
+      queryClient.setQueryData(['ficha', copia.id], copia);
+      await queryClient.invalidateQueries({ queryKey: ['fichas', copia.alunoId] });
+    },
+  });
+}
+
+/** Confirma antes de arquivar: a arquivada é só leitura (FR-014). */
+export function confirmarArquivamento(ativa: boolean): boolean {
+  return window.confirm(
+    ativa
+      ? 'Arquivar esta ficha? O aluno fica sem ficha ativa até você ativar outra. A ficha arquivada é só leitura; para reaproveitá-la, duplique.'
+      : 'Arquivar este rascunho? A ficha arquivada é só leitura; para reaproveitá-la, duplique.',
+  );
+}
+
 /** Confirma antes de ativar quando já há uma ativa, que será arquivada. */
 export function confirmarAtivacao(temOutraAtiva: boolean): boolean {
   if (!temOutraAtiva) return true;

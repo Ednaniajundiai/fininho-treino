@@ -19,7 +19,8 @@ import { Button } from '@/components/ui/button';
 import { Aviso, Card } from '@/components/ui/card';
 import { Input, Label } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
-import { api, type Exercicio, mensagensDeErro } from '@/lib/api/cliente';
+import { api, type Exercicio, type Ficha, mensagensDeErro } from '@/lib/api/cliente';
+import { confirmarAtivacao, useFichasDoAluno } from '@/lib/consultas';
 import { NOME_DA_MODALIDADE, NOME_DA_UNIDADE, rotuloDoDia } from '@/lib/fichas';
 import { cn } from '@/lib/utils';
 import {
@@ -32,12 +33,15 @@ import {
   novoItemDeCardio,
   novoItemDeForca,
   paraCorpo,
+  paraFormulario,
 } from './esquema';
 
 type Props = {
   alunoId: string;
-  /** Só os exercícios ativos entram nas novas escolhas (FR-011). */
+  /** O catálogo inteiro; o editor oferece só os ativos e os que a ficha já usa (FR-011). */
   exercicios: Exercicio[];
+  /** A ficha a editar (História 3); sem ela, o editor cria uma ficha nova. */
+  ficha?: Ficha;
 };
 
 type Contexto = {
@@ -53,43 +57,74 @@ function erroEm(errors: FieldErrors<FichaNoFormulario>, caminho: string): string
   return get(errors, `${caminho}.message`) ?? get(errors, `${caminho}.root.message`);
 }
 
+/** Erro da API com todas as mensagens, uma por linha (a tela mostra cada uma). */
+function erroDaApi(error: unknown): Error {
+  return new Error(mensagensDeErro(error, 'Não foi possível salvar a ficha.').join('\n'));
+}
+
 /**
- * Editor de ficha nova (História 1): dias em rotação e itens de força e cardio, em ordem.
- * Salva como rascunho ou já ativa num POST só; o rótulo do dia vem da posição.
+ * Editor de ficha: dias em rotação e itens de força e cardio, em ordem; o rótulo do dia vem da
+ * posição. Ficha nova sai num POST só, como rascunho ou já ativa (História 1). Ficha existente
+ * sai num PUT que substitui dias e itens (História 3): o rascunho pode ser salvo e ativado; a
+ * ativa segue com as regras de ativa.
  */
-export function EditorDeFicha({ alunoId, exercicios }: Props) {
+export function EditorDeFicha({ alunoId, exercicios, ficha }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [motivos, setMotivos] = useState<string[]>([]);
+  const fichasDoAluno = useFichasDoAluno(alunoId);
+  const jaAtiva = ficha?.status === 'ativa';
+  const temOutraAtiva =
+    fichasDoAluno.data?.some((outra) => outra.status === 'ativa' && outra.id !== ficha?.id) ??
+    false;
 
   const form = useForm<FichaNoFormulario, unknown, FichaValida>({
     resolver: zodResolver(esquemaDaFicha),
-    defaultValues: { nome: '', dias: [{ titulo: '', itens: [] }] },
+    defaultValues: ficha ? paraFormulario(ficha) : { nome: '', dias: [{ titulo: '', itens: [] }] },
   });
   const dias = useFieldArray({ control: form.control, name: 'dias' });
   const { errors } = form.formState;
 
+  // Novas escolhas só de exercício ativo; o que a ficha já usa continua, mesmo desativado.
+  const usados = new Set(
+    ficha?.dias.flatMap((dia) => dia.itens.flatMap((item) => item.exercicioId ?? [])) ?? [],
+  );
+  const escolhas = exercicios.filter((exercicio) => exercicio.ativo || usados.has(exercicio.id));
+  const temAtivos = exercicios.some((exercicio) => exercicio.ativo);
+
   const salvar = useMutation({
-    mutationFn: async ({ ficha, ativar }: { ficha: FichaValida; ativar: boolean }) => {
-      const { data, error } = await api.POST('/api/alunos/{alunoId}/fichas', {
-        params: { path: { alunoId } },
-        body: paraCorpo(ficha, ativar),
-      });
-      if (!data)
-        throw new Error(mensagensDeErro(error, 'Não foi possível salvar a ficha.').join('\n'));
-      return data;
+    mutationFn: async ({ dados, ativar }: { dados: FichaValida; ativar: boolean }) => {
+      if (!ficha) {
+        const { data, error } = await api.POST('/api/alunos/{alunoId}/fichas', {
+          params: { path: { alunoId } },
+          body: { ...paraCorpo(dados), ativar },
+        });
+        if (!data) throw erroDaApi(error);
+        return data;
+      }
+      const path = { id: ficha.id };
+      const salva = await api.PUT('/api/fichas/{id}', { params: { path }, body: paraCorpo(dados) });
+      if (!salva.data) throw erroDaApi(salva.error);
+      if (!ativar) return salva.data;
+      const ativada = await api.POST('/api/fichas/{id}/ativar', { params: { path } });
+      if (!ativada.data) throw erroDaApi(ativada.error);
+      return ativada.data;
     },
-    onSuccess: async (ficha) => {
+    onSuccess: async (salva) => {
+      queryClient.setQueryData(['ficha', salva.id], salva);
       await queryClient.invalidateQueries({ queryKey: ['fichas', alunoId] });
-      router.push(`/fichas/${ficha.id}`);
+      router.push(`/fichas/${salva.id}`);
     },
   });
 
+  /** `ativar` liga a ativação; a ficha que já é ativa segue as regras de ativa ao salvar. */
   function enviar(ativar: boolean) {
-    return form.handleSubmit((ficha) => {
-      const recusas = ativar ? motivosParaNaoAtivar(ficha) : [];
+    return form.handleSubmit((dados) => {
+      const recusas = ativar || jaAtiva ? motivosParaNaoAtivar(dados) : [];
       setMotivos(recusas);
-      if (recusas.length === 0) salvar.mutate({ ficha, ativar });
+      if (recusas.length > 0) return;
+      if (ativar && !confirmarAtivacao(temOutraAtiva)) return;
+      salvar.mutate({ dados, ativar });
     });
   }
 
@@ -98,7 +133,7 @@ export function EditorDeFicha({ alunoId, exercicios }: Props) {
     register: form.register,
     setValue: form.setValue,
     errors,
-    exercicios,
+    exercicios: escolhas,
   };
   const errosDaApi = salvar.isError ? salvar.error.message.split('\n') : [];
 
@@ -116,7 +151,7 @@ export function EditorDeFicha({ alunoId, exercicios }: Props) {
         </Campo>
       </Card>
 
-      {exercicios.length === 0 ? (
+      {!temAtivos ? (
         <Aviso tom="atencao">
           Seu catálogo não tem exercícios ativos, então só dá para adicionar cardio.{' '}
           <Link href="/exercicios" className="underline underline-offset-2">
@@ -169,17 +204,30 @@ export function EditorDeFicha({ alunoId, exercicios }: Props) {
       ) : null}
 
       <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:justify-end">
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={salvar.isPending}
-          onClick={() => void enviar(false)()}
-        >
-          Salvar rascunho
-        </Button>
-        <Button type="button" disabled={salvar.isPending} onClick={() => void enviar(true)()}>
-          {salvar.isPending ? 'Salvando…' : 'Salvar e ativar'}
-        </Button>
+        {ficha ? (
+          <Button asChild variant="ghost">
+            <Link href={`/fichas/${ficha.id}`}>Cancelar</Link>
+          </Button>
+        ) : null}
+        {jaAtiva ? (
+          <Button type="button" disabled={salvar.isPending} onClick={() => void enviar(false)()}>
+            {salvar.isPending ? 'Salvando…' : 'Salvar alterações'}
+          </Button>
+        ) : (
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={salvar.isPending}
+              onClick={() => void enviar(false)()}
+            >
+              Salvar rascunho
+            </Button>
+            <Button type="button" disabled={salvar.isPending} onClick={() => void enviar(true)()}>
+              {salvar.isPending ? 'Salvando…' : 'Salvar e ativar'}
+            </Button>
+          </>
+        )}
       </div>
     </form>
   );
@@ -257,7 +305,7 @@ function DiaDoEditor({
         <Button
           type="button"
           variant="secondary"
-          disabled={cheio || exercicios.length === 0}
+          disabled={cheio || !exercicios.some((exercicio) => exercicio.ativo)}
           onClick={() => itens.append(novoItemDeForca())}
         >
           <Dumbbell size={18} strokeWidth={1.5} aria-hidden />
@@ -349,7 +397,7 @@ function ItemDoEditor({
               <option value="">Escolha…</option>
               {exercicios.map((exercicio) => (
                 <option key={exercicio.id} value={exercicio.id}>
-                  {exercicio.nome}
+                  {exercicio.ativo ? exercicio.nome : `${exercicio.nome} (desativado)`}
                 </option>
               ))}
             </Select>

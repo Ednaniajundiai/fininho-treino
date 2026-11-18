@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional, ApiProperty, PartialType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsIn, IsString, Length } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, Length } from 'class-validator';
 import type { Exercise } from '../../generated/prisma/client.js';
 import { UNIDADES, type Unidade } from '../../fichas/ficha-validation.js';
 import { unidadeParaAApi } from '../unidade.js';
@@ -18,6 +18,16 @@ export class CriarExercicioDto {
   @ApiProperty({ enum: UNIDADES, enumName: 'Unidade' })
   @IsIn(UNIDADES)
   unidadePadrao!: Unidade;
+}
+
+/** Tudo opcional: só o que vier muda. Desativar é `ativo: false`; nunca apaga (FR-011). */
+export class AtualizarExercicioDto extends PartialType(CriarExercicioDto) {
+  @ApiPropertyOptional({
+    description: 'Falso desativa: some das novas escolhas e segue nas fichas que o usam.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  ativo?: boolean;
 }
 
 export class ExercicioDto {

@@ -162,6 +162,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/exercicios/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Renomear, mudar a unidade padrão ou desativar/reativar um exercício do catálogo */
+        patch: operations["ExerciciosController_atualizar"];
+        trace?: never;
+    };
     "/api/alunos/{alunoId}/fichas": {
         parameters: {
             query?: never;
@@ -189,7 +206,8 @@ export interface paths {
         };
         /** Ler uma ficha completa do professor logado */
         get: operations["FichasController_obter"];
-        put?: never;
+        /** Salvar a ficha: nome, dias e itens substituem os atuais (o status não muda) */
+        put: operations["FichasController_atualizar"];
         post?: never;
         delete?: never;
         options?: never;
@@ -208,6 +226,40 @@ export interface paths {
         put?: never;
         /** Ativar a ficha; a ativa anterior do aluno é arquivada */
         post: operations["FichasController_ativar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fichas/{id}/arquivar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Arquivar a ficha; se era a ativa, o aluno fica sem ficha ativa */
+        post: operations["FichasController_arquivar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fichas/{id}/duplicar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duplicar a ficha para um aluno do professor logado; a cópia nasce em rascunho */
+        post: operations["FichasController_duplicar"];
         delete?: never;
         options?: never;
         head?: never;
@@ -296,6 +348,13 @@ export interface components {
             /** @example Supino reto */
             nome: string;
             unidadePadrao: components["schemas"]["Unidade"];
+        };
+        AtualizarExercicioDto: {
+            /** @example Supino reto */
+            nome?: string;
+            unidadePadrao?: components["schemas"]["Unidade"];
+            /** @description Falso desativa: some das novas escolhas e segue nas fichas que o usam. */
+            ativo?: boolean;
         };
         /** @enum {string} */
         TipoDeItem: "forca" | "cardio";
@@ -416,6 +475,19 @@ export interface components {
             criadaEm: string;
             /** Format: date-time */
             atualizadaEm: string;
+        };
+        AtualizarFichaDto: {
+            /** @example Hipertrofia — bloco 1 */
+            nome: string;
+            /** @description Na ordem da rotação; o rótulo (A, B, C…) vem dessa ordem. */
+            dias: components["schemas"]["DiaFichaEntradaDto"][];
+        };
+        DuplicarFichaDto: {
+            /**
+             * Format: uuid
+             * @description Aluno de destino, do professor logado (pode ser o mesmo da ficha).
+             */
+            alunoId: string;
         };
         MinhaFichaDto: {
             /** @description A ficha ativa do aluno logado; null se não há ficha ativa. */
@@ -795,6 +867,59 @@ export interface operations {
             };
         };
     };
+    ExerciciosController_atualizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarExercicioDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExercicioDto"];
+                };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Exercício não encontrado (inexistente ou de outro professor). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Nome já existe no catálogo (sem diferença de maiúsculas). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     FichasController_listar: {
         parameters: {
             query?: never;
@@ -932,6 +1057,66 @@ export interface operations {
             };
         };
     };
+    FichasController_atualizar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AtualizarFichaDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaDto"];
+                };
+            };
+            /** @description Ficha inválida (faixa, séries, tetos; ficha ativa sem dia ou dia sem item) ou exercício indisponível. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ficha não encontrada (inexistente ou de outro professor). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ficha arquivada é só leitura. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     FichasController_ativar: {
         parameters: {
             query?: never;
@@ -973,6 +1158,108 @@ export interface operations {
                 content?: never;
             };
             /** @description Ficha não encontrada (inexistente ou de outro professor). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ficha arquivada não volta a ficar ativa (duplique). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FichasController_arquivar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaDto"];
+                };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ficha não encontrada (inexistente ou de outro professor). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A ficha já está arquivada. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FichasController_duplicar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DuplicarFichaDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaDto"];
+                };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ficha ou aluno de destino não encontrado (inexistente ou de outro professor). */
             404: {
                 headers: {
                     [name: string]: unknown;

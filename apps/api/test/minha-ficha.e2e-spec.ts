@@ -210,22 +210,23 @@ describe('GET /minha-ficha (aluno vê a ficha ativa, FR-008)', () => {
         ativar: true,
         dias: umDia(supino),
       });
-      await criarFicha(c.paula.token, c.alunoDaPaula.id, {
+      const nova = await criarFicha(c.paula.token, c.alunoDaPaula.id, {
         nome: 'Nova',
         ativar: true,
         dias: umDia(supino),
       });
-      // A ativa some (como no arquivar da US3), deixando só a arquivada.
-      await prisma.plan.updateMany({
-        where: { studentId: c.alunoDaPaula.id, status: 'ACTIVE' },
-        data: { status: 'ARCHIVED' },
-      });
+      // O professor arquiva a ativa pela rota real, deixando só arquivadas.
+      const arquivou = await http()
+        .post(`/api/fichas/${nova.id}/arquivar`)
+        .set(comToken(c.paula.token));
+      expect(arquivou.status).toBe(200);
 
       const resposta = await minhaFicha(c.alunoDaPaula.token);
 
       expect(resposta.status).toBe(200);
       expect(resposta.body).toEqual({ ficha: null });
       expect(JSON.stringify(resposta.body)).not.toContain(antiga.id);
+      expect(JSON.stringify(resposta.body)).not.toContain(nova.id);
     });
 
     it('com ativa e arquivada, vem só a ativa (FR-006)', async () => {

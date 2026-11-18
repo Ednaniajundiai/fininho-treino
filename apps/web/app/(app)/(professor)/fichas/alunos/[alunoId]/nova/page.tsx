@@ -31,12 +31,7 @@ export default function NovaFichaPage() {
 
       {exercicios.isPending ? <p className="text-muted-foreground">Carregando…</p> : null}
       {exercicios.isError ? <Aviso tom="erro">{exercicios.error.message}</Aviso> : null}
-      {exercicios.data ? (
-        <EditorDeFicha
-          alunoId={alunoId}
-          exercicios={exercicios.data.filter((exercicio) => exercicio.ativo)}
-        />
-      ) : null}
+      {exercicios.data ? <EditorDeFicha alunoId={alunoId} exercicios={exercicios.data} /> : null}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { CriarFicha } from '@/lib/api/cliente';
+import type { AtualizarFicha, Ficha } from '@/lib/api/cliente';
 import { rotuloDoDia } from '@/lib/fichas';
 
 /*
@@ -106,11 +106,13 @@ export function motivosParaNaoAtivar(ficha: FichaValida): string[] {
   );
 }
 
-/** Monta o corpo do POST só com os campos do tipo de cada item (a API recusa campo a mais). */
-export function paraCorpo(ficha: FichaValida, ativar: boolean): CriarFicha {
+/**
+ * Nome, dias e itens no formato da API, só com os campos do tipo de cada item (a API recusa
+ * campo a mais). O PUT manda isto; o POST de criação acrescenta `ativar`.
+ */
+export function paraCorpo(ficha: FichaValida): AtualizarFicha {
   return {
     nome: ficha.nome,
-    ativar,
     dias: ficha.dias.map((dia) => ({
       titulo: dia.titulo,
       itens: dia.itens.map((item) => {
@@ -121,6 +123,37 @@ export function paraCorpo(ficha: FichaValida, ativar: boolean): CriarFicha {
         }
         const { tipo, modalidade, duracaoMinMin, duracaoMaxMin } = item;
         return { tipo, modalidade, duracaoMinMin, duracaoMaxMin, ...nota };
+      }),
+    })),
+  };
+}
+
+/** A ficha salva, no formato do formulário, para editar (História 3). */
+export function paraFormulario(ficha: Ficha): FichaNoFormulario {
+  return {
+    nome: ficha.nome,
+    dias: ficha.dias.map((dia) => ({
+      titulo: dia.titulo,
+      itens: dia.itens.map((item): ItemNoFormulario => {
+        const observacao = item.observacao ?? '';
+        if (item.tipo === 'forca') {
+          return {
+            tipo: 'forca',
+            exercicioId: item.exercicioId ?? '',
+            series: item.series ?? Number.NaN,
+            faixaMin: item.faixaMin ?? Number.NaN,
+            faixaMax: item.faixaMax ?? Number.NaN,
+            unidade: item.unidade ?? 'repeticoes',
+            observacao,
+          };
+        }
+        return {
+          tipo: 'cardio',
+          modalidade: item.modalidade ?? 'livre',
+          duracaoMinMin: item.duracaoMinMin ?? Number.NaN,
+          duracaoMaxMin: item.duracaoMaxMin ?? Number.NaN,
+          observacao,
+        };
       }),
     })),
   };

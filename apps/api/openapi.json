@@ -393,6 +393,64 @@
         ]
       }
     },
+    "/api/exercicios/{id}": {
+      "patch": {
+        "operationId": "ExerciciosController_atualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtualizarExercicioDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExercicioDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          },
+          "404": {
+            "description": "Exercício não encontrado (inexistente ou de outro professor)."
+          },
+          "409": {
+            "description": "Nome já existe no catálogo (sem diferença de maiúsculas)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Renomear, mudar a unidade padrão ou desativar/reativar um exercício do catálogo",
+        "tags": [
+          "exercicios"
+        ]
+      }
+    },
     "/api/alunos/{alunoId}/fichas": {
       "post": {
         "operationId": "FichasController_criar",
@@ -540,6 +598,65 @@
         "tags": [
           "fichas"
         ]
+      },
+      "put": {
+        "operationId": "FichasController_atualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtualizarFichaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ficha inválida (faixa, séries, tetos; ficha ativa sem dia ou dia sem item) ou exercício indisponível."
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          },
+          "404": {
+            "description": "Ficha não encontrada (inexistente ou de outro professor)."
+          },
+          "409": {
+            "description": "Ficha arquivada é só leitura."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Salvar a ficha: nome, dias e itens substituem os atuais (o status não muda)",
+        "tags": [
+          "fichas"
+        ]
       }
     },
     "/api/fichas/{id}/ativar": {
@@ -577,6 +694,9 @@
           },
           "404": {
             "description": "Ficha não encontrada (inexistente ou de outro professor)."
+          },
+          "409": {
+            "description": "Ficha arquivada não volta a ficar ativa (duplique)."
           }
         },
         "security": [
@@ -585,6 +705,109 @@
           }
         ],
         "summary": "Ativar a ficha; a ativa anterior do aluno é arquivada",
+        "tags": [
+          "fichas"
+        ]
+      }
+    },
+    "/api/fichas/{id}/arquivar": {
+      "post": {
+        "operationId": "FichasController_arquivar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          },
+          "404": {
+            "description": "Ficha não encontrada (inexistente ou de outro professor)."
+          },
+          "409": {
+            "description": "A ficha já está arquivada."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Arquivar a ficha; se era a ativa, o aluno fica sem ficha ativa",
+        "tags": [
+          "fichas"
+        ]
+      }
+    },
+    "/api/fichas/{id}/duplicar": {
+      "post": {
+        "operationId": "FichasController_duplicar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DuplicarFichaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          },
+          "404": {
+            "description": "Ficha ou aluno de destino não encontrado (inexistente ou de outro professor)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Duplicar a ficha para um aluno do professor logado; a cópia nasce em rascunho",
         "tags": [
           "fichas"
         ]
@@ -835,6 +1058,26 @@
           "nome",
           "unidadePadrao"
         ]
+      },
+      "AtualizarExercicioDto": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "example": "Supino reto"
+          },
+          "unidadePadrao": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Unidade"
+              }
+            ]
+          },
+          "ativo": {
+            "type": "boolean",
+            "description": "Falso desativa: some das novas escolhas e segue nas fichas que o usam."
+          }
+        }
       },
       "TipoDeItem": {
         "type": "string",
@@ -1150,6 +1393,39 @@
           "status",
           "criadaEm",
           "atualizadaEm"
+        ]
+      },
+      "AtualizarFichaDto": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "example": "Hipertrofia — bloco 1"
+          },
+          "dias": {
+            "description": "Na ordem da rotação; o rótulo (A, B, C…) vem dessa ordem.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiaFichaEntradaDto"
+            }
+          }
+        },
+        "required": [
+          "nome",
+          "dias"
+        ]
+      },
+      "DuplicarFichaDto": {
+        "type": "object",
+        "properties": {
+          "alunoId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Aluno de destino, do professor logado (pode ser o mesmo da ficha)."
+          }
+        },
+        "required": [
+          "alunoId"
         ]
       },
       "MinhaFichaDto": {

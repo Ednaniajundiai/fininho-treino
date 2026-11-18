@@ -26,6 +26,21 @@ export default function ExerciciosPage() {
     },
   });
 
+  // Desativar nunca apaga: some das novas escolhas e segue nas fichas que o usam (FR-011).
+  const alternar = useMutation({
+    mutationFn: async ({ id, ativo }: { id: string; ativo: boolean }) => {
+      const { data, error } = await api.PATCH('/api/exercicios/{id}', {
+        params: { path: { id } },
+        body: { ativo },
+      });
+      if (!data) throw new Error(mensagemDeErro(error, 'Não foi possível alterar o exercício.'));
+      return data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['exercicios'] });
+    },
+  });
+
   function aoEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const formulario = evento.currentTarget;
@@ -45,6 +60,7 @@ export default function ExerciciosPage() {
         <h1 className="text-2xl">Exercícios</h1>
         <p className="mt-1 text-muted-foreground">
           Seu catálogo. Os exercícios cadastrados aqui aparecem na hora de montar as fichas.
+          Desativar tira o exercício das novas escolhas; as fichas que já o usam continuam iguais.
         </p>
       </div>
 
@@ -93,6 +109,11 @@ export default function ExerciciosPage() {
             {exercicios.error.message}
           </Aviso>
         ) : null}
+        {alternar.isError ? (
+          <Aviso tom="erro" className="mt-3">
+            {alternar.error.message}
+          </Aviso>
+        ) : null}
         {exercicios.data?.length === 0 ? (
           <p className="mt-3 text-muted-foreground">
             Seu catálogo está vazio. Cadastre o primeiro exercício no formulário acima.
@@ -113,6 +134,15 @@ export default function ExerciciosPage() {
                     <span className="rounded-lg bg-border/60 px-2 py-1">Desativado</span>
                   )}
                   <span>{NOME_DA_UNIDADE[exercicio.unidadePadrao]}</span>
+                  <Button
+                    variant="ghost"
+                    className="px-3 text-sm"
+                    disabled={alternar.isPending}
+                    aria-label={`${exercicio.ativo ? 'Desativar' : 'Reativar'} ${exercicio.nome}`}
+                    onClick={() => alternar.mutate({ id: exercicio.id, ativo: !exercicio.ativo })}
+                  >
+                    {exercicio.ativo ? 'Desativar' : 'Reativar'}
+                  </Button>
                 </div>
               </li>
             ))}

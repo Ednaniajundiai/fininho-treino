@@ -1,7 +1,8 @@
-import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -12,7 +13,9 @@ import {
 } from '@nestjs/swagger';
 import { Roles, UsuarioAtual, type UsuarioAutenticado } from '../auth/decorators.js';
 import {
+  AtualizarFichaDto,
   CriarFichaDto,
+  DuplicarFichaDto,
   FichaDto,
   FichaResumoDto,
   paraFichaDto,
@@ -77,10 +80,59 @@ export class FichasController {
   @ApiOkResponse({ type: FichaDto })
   @ApiBadRequestResponse({ description: 'Ficha sem dia, ou com dia sem item.' })
   @ApiNotFoundResponse({ description: 'Ficha não encontrada (inexistente ou de outro professor).' })
+  @ApiConflictResponse({ description: 'Ficha arquivada não volta a ficar ativa (duplique).' })
   async ativar(
     @UsuarioAtual() professor: UsuarioAutenticado,
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<FichaDto> {
     return paraFichaDto(await this.fichas.ativar(professor.id, id));
+  }
+
+  @Put('fichas/:id')
+  @ApiOperation({
+    summary: 'Salvar a ficha: nome, dias e itens substituem os atuais (o status não muda)',
+  })
+  @ApiOkResponse({ type: FichaDto })
+  @ApiBadRequestResponse({
+    description:
+      'Ficha inválida (faixa, séries, tetos; ficha ativa sem dia ou dia sem item) ou exercício indisponível.',
+  })
+  @ApiNotFoundResponse({ description: 'Ficha não encontrada (inexistente ou de outro professor).' })
+  @ApiConflictResponse({ description: 'Ficha arquivada é só leitura.' })
+  async atualizar(
+    @UsuarioAtual() professor: UsuarioAutenticado,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AtualizarFichaDto,
+  ): Promise<FichaDto> {
+    return paraFichaDto(await this.fichas.atualizar(professor.id, id, dto));
+  }
+
+  @Post('fichas/:id/arquivar')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Arquivar a ficha; se era a ativa, o aluno fica sem ficha ativa' })
+  @ApiOkResponse({ type: FichaDto })
+  @ApiNotFoundResponse({ description: 'Ficha não encontrada (inexistente ou de outro professor).' })
+  @ApiConflictResponse({ description: 'A ficha já está arquivada.' })
+  async arquivar(
+    @UsuarioAtual() professor: UsuarioAutenticado,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<FichaDto> {
+    return paraFichaDto(await this.fichas.arquivar(professor.id, id));
+  }
+
+  @Post('fichas/:id/duplicar')
+  @ApiOperation({
+    summary: 'Duplicar a ficha para um aluno do professor logado; a cópia nasce em rascunho',
+  })
+  @ApiCreatedResponse({ type: FichaDto })
+  @ApiNotFoundResponse({
+    description: 'Ficha ou aluno de destino não encontrado (inexistente ou de outro professor).',
+  })
+  async duplicar(
+    @UsuarioAtual() professor: UsuarioAutenticado,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: DuplicarFichaDto,
+  ): Promise<FichaDto> {
+    return paraFichaDto(await this.fichas.duplicar(professor.id, id, dto.alunoId));
   }
 }

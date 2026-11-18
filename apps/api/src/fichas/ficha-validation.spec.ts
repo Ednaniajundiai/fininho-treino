@@ -148,4 +148,18 @@ describe('rótulo e ordem (FR-003, FR-004, FR-012, cenário 6)', () => {
     expect(numerados[0]?.itens[2]?.series).toBe(4);
     expect(numerados[1]?.itens[0]?.modalidade).toBe('esteira');
   });
+  it('ao reordenar ou remover dias, os rótulos seguem A, B, C... sem buraco (FR-012)', () => {
+    const [a, b, c, d] = ['Peito', 'Costas', 'Pernas', 'Ombros'].map((titulo) =>
+      dia([forca()], titulo),
+    );
+    const rotulos = (dias: DiaEntrada[]) => numerarDias(dias).map((x) => [x.rotulo, x.titulo]);
+
+    // Remove o B e põe o último na frente.
+    expect(rotulos([d!, a!, c!])).toEqual([
+      ['A', 'Ombros'],
+      ['B', 'Peito'],
+      ['C', 'Pernas'],
+    ]);
+    expect(rotulos([b!])).toEqual([['A', 'Costas']]);
+  });
 });

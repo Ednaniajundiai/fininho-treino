@@ -1,26 +1,36 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
+import { Archive, ArrowLeft, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { DiasDaFicha } from '@/components/ficha/dias-da-ficha';
+import { DuplicarFicha } from '@/components/ficha/duplicar-ficha';
 import { ChipDeStatus } from '@/components/ficha/status-da-ficha';
 import { Button } from '@/components/ui/button';
 import { Aviso } from '@/components/ui/card';
 import {
+  confirmarArquivamento,
   confirmarAtivacao,
   useAlunos,
+  useArquivarFicha,
   useAtivarFicha,
   useFicha,
   useFichasDoAluno,
 } from '@/lib/consultas';
 import { dataCurta } from '@/lib/fichas';
 
+const TEXTO_DO_STATUS = {
+  rascunho: 'Rascunho: o aluno ainda não vê esta ficha. Ative quando estiver pronta.',
+  ativa: 'Ficha ativa: é a que o aluno vê. As edições chegam a ele assim que você salva.',
+  arquivada: 'Arquivada: só leitura. Para reaproveitá-la, duplique.',
+} as const;
+
 export default function FichaPage() {
   const { id } = useParams<{ id: string }>();
   const ficha = useFicha(id);
   const alunos = useAlunos();
   const ativar = useAtivarFicha();
+  const arquivar = useArquivarFicha();
   const outras = useFichasDoAluno(ficha.data?.alunoId);
 
   if (ficha.isPending) return <p className="text-muted-foreground">Carregando…</p>;
@@ -30,6 +40,9 @@ export default function FichaPage() {
   const aluno = alunos.data?.find((a) => a.id === dados.alunoId);
   const temOutraAtiva =
     outras.data?.some((outra) => outra.status === 'ativa' && outra.id !== dados.id) ?? false;
+  const somenteLeitura = dados.status === 'arquivada';
+  const ocupado = ativar.isPending || arquivar.isPending;
+  const erro = ativar.error ?? arquivar.error;
 
   return (
     <div className="flex flex-col gap-6">
@@ -51,28 +64,44 @@ export default function FichaPage() {
         </p>
       </div>
 
-      {dados.status === 'rascunho' ? (
-        <div className="flex flex-col gap-3">
-          <p className="text-muted-foreground">
-            Rascunho: o aluno ainda não vê esta ficha. Ative quando estiver pronta.
-          </p>
-          <Button
-            className="self-start"
-            disabled={ativar.isPending}
-            onClick={() => {
-              if (confirmarAtivacao(temOutraAtiva)) ativar.mutate(dados.id);
-            }}
-          >
-            {ativar.isPending ? 'Ativando…' : 'Ativar ficha'}
-          </Button>
-          {ativar.isError ? <Aviso tom="erro">{ativar.error.message}</Aviso> : null}
-        </div>
-      ) : null}
-      {dados.status === 'arquivada' ? (
-        <p className="text-muted-foreground">Arquivada: fica só para consulta.</p>
-      ) : null}
+      <div className="flex flex-col gap-3">
+        <p className="text-muted-foreground">{TEXTO_DO_STATUS[dados.status]}</p>
+        {somenteLeitura ? null : (
+          <div className="flex flex-wrap gap-3">
+            {dados.status === 'rascunho' ? (
+              <Button
+                disabled={ocupado}
+                onClick={() => {
+                  if (confirmarAtivacao(temOutraAtiva)) ativar.mutate(dados.id);
+                }}
+              >
+                {ativar.isPending ? 'Ativando…' : 'Ativar ficha'}
+              </Button>
+            ) : null}
+            <Button asChild variant={dados.status === 'ativa' ? 'primary' : 'secondary'}>
+              <Link href={`/fichas/${dados.id}/editar`}>
+                <Pencil size={18} strokeWidth={1.5} aria-hidden />
+                Editar
+              </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              disabled={ocupado}
+              onClick={() => {
+                if (confirmarArquivamento(dados.status === 'ativa')) arquivar.mutate(dados.id);
+              }}
+            >
+              <Archive size={18} strokeWidth={1.5} aria-hidden />
+              {arquivar.isPending ? 'Arquivando…' : 'Arquivar'}
+            </Button>
+          </div>
+        )}
+        {erro ? <Aviso tom="erro">{erro.message}</Aviso> : null}
+      </div>
 
       <DiasDaFicha dias={dados.dias} />
+
+      <DuplicarFicha key={dados.id} ficha={dados} primario={somenteLeitura} />
     </div>
   );
 }

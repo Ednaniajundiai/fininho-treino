@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
@@ -132,6 +132,21 @@ export class CriarFichaDto {
   @ValidateNested({ each: true })
   @Type(() => DiaFichaEntradaDto)
   dias!: DiaFichaEntradaDto[];
+}
+
+/**
+ * PUT /fichas/:id: nome e dias substituem os atuais. O status não muda por aqui (ativar e
+ * arquivar têm rota própria); campo `ativar` é recusado como campo extra.
+ */
+export class AtualizarFichaDto extends PickType(CriarFichaDto, ['nome', 'dias'] as const) {}
+
+export class DuplicarFichaDto {
+  @ApiProperty({
+    format: 'uuid',
+    description: 'Aluno de destino, do professor logado (pode ser o mesmo da ficha).',
+  })
+  @IsUUID()
+  alunoId!: string;
 }
 
 // Saída (contrato fichas/C-01).

@@ -100,24 +100,24 @@ banco de produção.
 
 ### Testes para a História 3 (escrever primeiro)
 
-- [ ] T034 [P] [US3] e2e `PUT /fichas/:id`: 401, 403, 404 de outro dono; edição das séries de um item na ficha ativa aparece em `GET /minha-ficha` do aluno (FR-009, FR-007, cenário 1) em `apps/api/test/fichas-edicao.e2e-spec.ts`
-- [ ] T035 [P] [US3] e2e: `PUT` recusa (400) mais de 10 dias, mais de 30 itens num dia, remover o último item de um dia e o último dia de ficha ativa (FR-005, cenário 6) em `apps/api/test/fichas-edicao.e2e-spec.ts`
-- [ ] T036 [P] [US3] Teste de unidade: rótulos continuam A, B, C... em sequência ao reordenar ou remover dias (FR-012) em `apps/api/src/fichas/ficha-validation.spec.ts`
-- [ ] T037 [P] [US3] e2e `POST /fichas/:id/arquivar`: 401, 403, 404 de outro dono; arquivar a ativa sem ativar outra deixa o aluno sem ficha em `GET /minha-ficha` (FR-010, FR-006, FR-008) em `apps/api/test/fichas-edicao.e2e-spec.ts`
-- [ ] T038 [P] [US3] e2e: ficha arquivada fica só leitura: `PUT`, `ativar` e `arquivar` respondem 409, `GET` continua legível, e a anterior arquivada por troca (cenário 2) segue legível (FR-014, FR-006, cenários 2 e 5) em `apps/api/test/fichas-edicao.e2e-spec.ts`
-- [ ] T039 [P] [US3] e2e `POST /fichas/:id/duplicar`: 401, 403, 404 (ficha de outro dono e `alunoId` de destino de outro professor); duplicar para o mesmo aluno e para outro gera ficha nova e independente (editar a cópia não altera a original) com os mesmos dias e itens (FR-010, FR-007, cenário 3) em `apps/api/test/fichas-edicao.e2e-spec.ts`
-- [ ] T040 [P] [US3] e2e `PATCH /exercicios/:id`: 401, 403, 404 de outro dono; desativar exercício em uso o tira das novas escolhas (criar item com ele é recusado) e ele continua na ficha existente e em `GET /minha-ficha` (FR-011, FR-007, cenário 4) em `apps/api/test/exercicios.e2e-spec.ts`
+- [x] T034 [P] [US3] e2e `PUT /fichas/:id`: 401, 403, 404 de outro dono; edição das séries de um item na ficha ativa aparece em `GET /minha-ficha` do aluno (FR-009, FR-007, cenário 1) em `apps/api/test/fichas-edicao.e2e-spec.ts`
+- [x] T035 [P] [US3] e2e: `PUT` recusa (400) mais de 10 dias, mais de 30 itens num dia, remover o último item de um dia e o último dia de ficha ativa (FR-005, cenário 6) em `apps/api/test/fichas-edicao.e2e-spec.ts`
+- [x] T036 [P] [US3] Teste de unidade: rótulos continuam A, B, C... em sequência ao reordenar ou remover dias (FR-012) em `apps/api/src/fichas/ficha-validation.spec.ts`
+- [x] T037 [P] [US3] e2e `POST /fichas/:id/arquivar`: 401, 403, 404 de outro dono; arquivar a ativa sem ativar outra deixa o aluno sem ficha em `GET /minha-ficha` (FR-010, FR-006, FR-008) em `apps/api/test/fichas-edicao.e2e-spec.ts`
+- [x] T038 [P] [US3] e2e: ficha arquivada fica só leitura: `PUT`, `ativar` e `arquivar` respondem 409, `GET` continua legível, e a anterior arquivada por troca (cenário 2) segue legível (FR-014, FR-006, cenários 2 e 5) em `apps/api/test/fichas-edicao.e2e-spec.ts`
+- [x] T039 [P] [US3] e2e `POST /fichas/:id/duplicar`: 401, 403, 404 (ficha de outro dono e `alunoId` de destino de outro professor); duplicar para o mesmo aluno e para outro gera ficha nova e independente (editar a cópia não altera a original) com os mesmos dias e itens (FR-010, FR-007, cenário 3) em `apps/api/test/fichas-edicao.e2e-spec.ts`
+- [x] T040 [P] [US3] e2e `PATCH /exercicios/:id`: 401, 403, 404 de outro dono; desativar exercício em uso o tira das novas escolhas (criar item com ele é recusado) e ele continua na ficha existente e em `GET /minha-ficha` (FR-011, FR-007, cenário 4) em `apps/api/test/exercicios.e2e-spec.ts`
 
 ### Implementação da História 3
 
-- [ ] T041 [US3] Implementar `FichasService.atualizar` (`PUT` substitui dias e itens numa transação, só ficha ativa ou rascunho, 409 em arquivada, tetos e mínimos) e a rota em `apps/api/src/fichas/` (faz T034, T035, T036 passarem; depende de T019)
-- [ ] T042 [US3] Implementar `arquivar` e o bloqueio de arquivada (409 em `ativar`/`PUT`/`arquivar`) em `apps/api/src/fichas/` (faz T037, T038 passarem; depende de T041)
-- [ ] T043 [US3] Implementar `duplicar` (ficha nova independente, `alunoId` de destino do próprio professor) em `apps/api/src/fichas/duplicacao.ts` e a rota (faz T039 passar; depende de T041)
-- [ ] T044 [P] [US3] Implementar `PATCH /exercicios/:id` (renomear, unidade padrão, desativar/reativar, nunca apagar) em `apps/api/src/exercicios/` (faz T040 passar; depende de T017)
-- [ ] T045 [US3] Regenerar com `pnpm gen:api` (`openapi.json` e `schema.d.ts`; depende de T042, T043, T044)
-- [ ] T046 [US3] Telas de edição da ficha, arquivar, trocar a ativa e duplicar (escolha do aluno de destino) em `apps/web/app/fichas/` e `apps/web/components/ficha/`, e desativar/reativar exercício em `apps/web/app/exercicios/` (depende de T045)
-- [ ] T047 [US3] Validação manual de FR-013 nas telas de edição: português, celular; captura 390px e 1280px, claro e escuro, contra `~/.claude/DESIGN.base.md` (depende de T046)
-- [ ] T048 [US3] Rodar `scripts/gate.sh` e `pnpm --filter api test:e2e`, gravar `specs/002-fichas-treino/ESTADO.md` e commitar a história 3 com a prova (depende de T034-T047)
+- [x] T041 [US3] Implementar `FichasService.atualizar` (`PUT` substitui dias e itens numa transação, só ficha ativa ou rascunho, 409 em arquivada, tetos e mínimos) e a rota em `apps/api/src/fichas/` (faz T034, T035, T036 passarem; depende de T019)
+- [x] T042 [US3] Implementar `arquivar` e o bloqueio de arquivada (409 em `ativar`/`PUT`/`arquivar`) em `apps/api/src/fichas/` (faz T037, T038 passarem; depende de T041)
+- [x] T043 [US3] Implementar `duplicar` (ficha nova independente, `alunoId` de destino do próprio professor) em `apps/api/src/fichas/duplicacao.ts` e a rota (faz T039 passar; depende de T041)
+- [x] T044 [P] [US3] Implementar `PATCH /exercicios/:id` (renomear, unidade padrão, desativar/reativar, nunca apagar) em `apps/api/src/exercicios/` (faz T040 passar; depende de T017)
+- [x] T045 [US3] Regenerar com `pnpm gen:api` (`openapi.json` e `schema.d.ts`; depende de T042, T043, T044)
+- [x] T046 [US3] Telas de edição da ficha, arquivar, trocar a ativa e duplicar (escolha do aluno de destino) em `apps/web/app/fichas/` e `apps/web/components/ficha/`, e desativar/reativar exercício em `apps/web/app/exercicios/` (depende de T045)
+- [x] T047 [US3] Validação manual de FR-013 nas telas de edição: português, celular; captura 390px e 1280px, claro e escuro, contra `~/.claude/DESIGN.base.md` (depende de T046)
+- [x] T048 [US3] Rodar `scripts/gate.sh` e `pnpm --filter api test:e2e`, gravar `specs/002-fichas-treino/ESTADO.md` e commitar a história 3 com a prova (depende de T034-T047)
 
 **Checkpoint**: ciclo completo de manutenção da ficha funcionando.
 
@@ -161,10 +161,23 @@ banco de produção.
 - Front: validação manual do FR-013 por captura (editor e catálogo em 390px e 1280px, claro e escuro). Erros de formato do class-validator na API continuam em inglês; o front valida igual para a pessoa não vê-los.
 - Pendência: `design:accessibility-review` não rodada (fica para o Polimento).
 
-**História 2** — API e tela do aluno prontas; commit pendente (T033 aguarda o dono).
+**História 2** — API e tela do aluno prontas; commitada em `3af0b4d` e revisada (`revisao/US2.md`).
 - `GET /api/minha-ficha` em `MinhaFichaController` próprio (`@Roles('ALUNO')`, sem `@PermiteSenhaProvisoria`), aluno pelo token, filtro `status = ACTIVE`. Resposta `200 { ficha: FichaDto | null }`: o objeto envelope evita corpo vazio (o Nest manda `null` como resposta sem corpo, que o cliente gerado não lê). Registrar em `fichas/C-01` no T050.
 - Teste primeiro: 10 e2e em `apps/api/test/minha-ficha.e2e-spec.ts`; 9 falharam com 404 (rota inexistente) antes da implementação; o de 403 do aluno nas rotas do professor já passava (comportamento da US1, mantido como prova do cenário 4).
 - A ficha devolvida ao aluno é a mesma `FichaDto` do professor (inclui `professorId` e `exercicioId`); nenhum campo de outro aluno.
 - Front: `app/(app)/minha-ficha` reaproveita `DiasDaFicha`; menu por papel (aluno vê só "Minha ficha"; professor, o de antes); botão "Ver minha ficha" na página inicial do aluno. Professor que abrir a URL vê "Esta área é só do aluno." sem chamar a API.
 - T032: validação manual com contas fictícias (`@exemplo.test`, apagadas depois junto com ficha, exercícios e tokens de renovação): ficha igual à prescrita; 390px e 1280px, claro e escuro; aviso de "ainda não tem ficha" em 390px claro. Capturas fora do repositório (scratchpad da sessão).
 
+
+**História 3** — API e telas prontas; gate verde; commit pendente (aguarda revisão e o dono).
+- Teste primeiro: `apps/api/test/fichas-edicao.e2e-spec.ts` (27 casos) e 8 casos de `PATCH` em `exercicios.e2e-spec.ts`; antes da implementação falharam com 404 (rotas inexistentes). O caso de corrida no `POST` de criação falhou com 201 no código da US1, provando a corrida desativar × salvar. T036 (rótulos ao reordenar/remover) passou de primeira: a derivação da US1 já cobria; fica como prova do FR-012.
+- `PUT /fichas/:id` (`AtualizarFichaDto` = nome e dias; `ativar` é campo extra, 400): transação com `SELECT ... FOR UPDATE` na ficha; o status lido depois da trava decide as regras (ativa exige dia e item; rascunho pode ficar vazio; arquivada 409). Apaga os dias (cascata) e recria.
+- `ativar`, `arquivar` e `PUT` em ficha arquivada respondem 409 ("Ficha arquivada é só leitura. Para reaproveitá-la, duplique."); a checagem roda dentro da transação, depois da trava, então não há corrida com arquivar.
+- Corrida desativar × salvar (melhoria 4 da US1): a checagem de exercício disponível foi para dentro da transação de criar e de salvar, com `FOR SHARE` nos exercícios escolhidos (`travarExerciciosAtivos`). A desativação espera a ficha terminar; a ficha que chega depois da desativação o recusa. Provado: sem o `FOR SHARE`, os dois casos de corrida dão 200/201.
+- Exercício já usado pela ficha continua aceito no `PUT` mesmo desativado (FR-009 + FR-011: "continua nas fichas existentes"); só escolha nova exige exercício ativo. O editor oferece os ativos mais os que a ficha já usa, marcados "(desativado)".
+- `duplicar`: `POST /fichas/:id/duplicar` com `{ alunoId }`; ficha de outro dono 404 "Ficha não encontrada."; aluno de outro professor ou inexistente 404 "Aluno não encontrado."; a cópia nasce rascunho, com o mesmo nome, e copia os exercícios como estão (mesmo desativados). Arquivada pode ser duplicada.
+- `PATCH /exercicios/:id`: nome, unidade padrão e `ativo`, todos opcionais; 409 de nome repetido vem do índice do banco (helper `recusarNomeRepetido`, também usado no `POST`).
+- Mensagens "Para ativar, ..." reaproveitadas no `PUT` da ficha ativa (o texto da US1 não mudou).
+- US2: o teste que forçava "arquivada" por `updateMany` usa agora a rota real de arquivar.
+- Front: página `fichas/[id]/editar` (o editor da criação, preenchido; arquivada mostra só o aviso), ações na página da ficha (Ativar, Editar, Arquivar com confirmação, Duplicar com escolha do aluno), "Salvar e ativar" pede confirmação quando já há ativa, Desativar/Reativar no catálogo. Arquivada fica só leitura na tela.
+- T047: validação manual com contas fictícias `@exemplo.test` (apagadas depois, com fichas, exercícios e tokens): editar séries, duplicar para outro aluno e para o mesmo, ativar a cópia (confirmação de troca), arquivar (confirmação), arquivada só leitura, desativar exercício em uso e salvar a ficha que o usa. Capturas 390px e 1280px, claro e escuro, fora do repositório; o aviso "Você ainda não tem ficha" foi capturado nas 4 combinações (melhoria 4 da US2).

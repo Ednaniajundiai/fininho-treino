@@ -10,6 +10,7 @@ export type Ficha = components['schemas']['FichaDto'];
 export type FichaResumo = components['schemas']['FichaResumoDto'];
 export type StatusDaFicha = components['schemas']['StatusDaFicha'];
 export type CriarFicha = components['schemas']['CriarFichaDto'];
+export type AtualizarFicha = components['schemas']['AtualizarFichaDto'];
 
 /**
  * O token de acesso vive só aqui, em memória (contrato autenticacao/C-03): some ao recarregar a

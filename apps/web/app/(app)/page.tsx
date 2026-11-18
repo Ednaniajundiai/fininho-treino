@@ -24,9 +24,19 @@ export default function InicioPage() {
         <h2 className="text-lg">Fichas de treino</h2>
         <p className="mt-1 text-muted-foreground">
           {professor
-            ? 'As fichas que você montar para os seus alunos aparecem aqui.'
+            ? 'Monte a ficha de cada aluno com os exercícios do seu catálogo.'
             : 'A ficha que o seu professor montar para você aparece aqui.'}
         </p>
+        {professor ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button asChild variant="secondary">
+              <Link href="/fichas">Ver fichas</Link>
+            </Button>
+            <Button asChild variant="ghost">
+              <Link href="/exercicios">Catálogo de exercícios</Link>
+            </Button>
+          </div>
+        ) : null}
       </Card>
 
       {professor ? (

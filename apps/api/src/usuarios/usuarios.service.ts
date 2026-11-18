@@ -140,8 +140,9 @@ export class UsuariosService {
   /**
    * Checagem de posse (princípio I): o aluno só existe para o professor dele. Aluno de outro
    * professor responde o mesmo "não encontrado" de um id inexistente, para não revelar que existe.
+   * Usada também pelas fichas (002).
    */
-  private async alunoDoProfessor(professorId: string, alunoId: string): Promise<User> {
+  async alunoDoProfessor(professorId: string, alunoId: string): Promise<User> {
     const aluno = await this.prisma.user.findFirst({
       where: { id: alunoId, teacherId: professorId },
     });

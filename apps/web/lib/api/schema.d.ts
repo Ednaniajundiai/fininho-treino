@@ -144,6 +144,76 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/exercicios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar o catálogo do professor logado, com os desativados */
+        get: operations["ExerciciosController_listar"];
+        put?: never;
+        /** Cadastrar exercício no catálogo do professor logado */
+        post: operations["ExerciciosController_criar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alunos/{alunoId}/fichas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar as fichas de um aluno do professor logado */
+        get: operations["FichasController_listar"];
+        put?: never;
+        /** Criar ficha para um aluno do professor logado (rascunho ou já ativa) */
+        post: operations["FichasController_criar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fichas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ler uma ficha completa do professor logado */
+        get: operations["FichasController_obter"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/fichas/{id}/ativar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ativar a ficha; a ativa anterior do aluno é arquivada */
+        post: operations["FichasController_ativar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -193,6 +263,142 @@ export interface components {
              * @example abcd-efgh-jkmn
              */
             senhaProvisoria: string;
+        };
+        /** @enum {string} */
+        Unidade: "repeticoes" | "segundos";
+        ExercicioDto: {
+            /** Format: uuid */
+            id: string;
+            /** @example Supino reto */
+            nome: string;
+            unidadePadrao: components["schemas"]["Unidade"];
+            /** @description Desativado some das novas escolhas, mas segue nas fichas que o usam. */
+            ativo: boolean;
+        };
+        CriarExercicioDto: {
+            /** @example Supino reto */
+            nome: string;
+            unidadePadrao: components["schemas"]["Unidade"];
+        };
+        /** @enum {string} */
+        TipoDeItem: "forca" | "cardio";
+        /**
+         * @description Cardio.
+         * @enum {string}
+         */
+        Modalidade: "esteira" | "bike" | "escada" | "livre";
+        ItemFichaEntradaDto: {
+            tipo: components["schemas"]["TipoDeItem"];
+            /** @example Cadência lenta na descida */
+            observacao?: string;
+            /**
+             * Format: uuid
+             * @description Força: exercício ativo do catálogo.
+             */
+            exercicioId?: string;
+            /**
+             * @description Força: 1 ou mais.
+             * @example 3
+             */
+            series?: number;
+            /**
+             * @description Força: mínimo da faixa.
+             * @example 8
+             */
+            faixaMin?: number;
+            /**
+             * @description Força: máximo da faixa.
+             * @example 12
+             */
+            faixaMax?: number;
+            /** @description Força. */
+            unidade?: components["schemas"]["Unidade"];
+            /** @description Cardio. */
+            modalidade?: components["schemas"]["Modalidade"];
+            /**
+             * @description Cardio: duração mínima em minutos.
+             * @example 10
+             */
+            duracaoMinMin?: number;
+            /**
+             * @description Cardio: duração máxima em minutos.
+             * @example 15
+             */
+            duracaoMaxMin?: number;
+        };
+        DiaFichaEntradaDto: {
+            /** @example Peito e tríceps */
+            titulo: string;
+            /** @description Na ordem de execução. */
+            itens: components["schemas"]["ItemFichaEntradaDto"][];
+        };
+        CriarFichaDto: {
+            /** @example Hipertrofia — bloco 1 */
+            nome: string;
+            /**
+             * @description Verdadeiro cria já ativa (arquiva a ativa anterior); senão nasce rascunho.
+             * @default false
+             */
+            ativar: boolean;
+            /** @description Na ordem da rotação; o rótulo (A, B, C…) vem dessa ordem. */
+            dias: components["schemas"]["DiaFichaEntradaDto"][];
+        };
+        /** @enum {string} */
+        StatusDaFicha: "rascunho" | "ativa" | "arquivada";
+        ItemFichaDto: {
+            /** @example 1 */
+            ordem: number;
+            tipo: components["schemas"]["TipoDeItem"];
+            observacao?: string;
+            /** Format: uuid */
+            exercicioId?: string;
+            /** @description Nome do exercício, para quem não vê o catálogo. */
+            exercicioNome?: string;
+            series?: number;
+            faixaMin?: number;
+            faixaMax?: number;
+            unidade?: components["schemas"]["Unidade"];
+            modalidade?: components["schemas"]["Modalidade"];
+            duracaoMinMin?: number;
+            duracaoMaxMin?: number;
+        };
+        DiaFichaDto: {
+            /** @example A */
+            rotulo: string;
+            /** @example Peito e tríceps */
+            titulo: string;
+            /** @example 1 */
+            ordem: number;
+            itens: components["schemas"]["ItemFichaDto"][];
+        };
+        FichaDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            alunoId: string;
+            /** @example Hipertrofia — bloco 1 */
+            nome: string;
+            status: components["schemas"]["StatusDaFicha"];
+            /** Format: date-time */
+            criadaEm: string;
+            /** Format: date-time */
+            atualizadaEm: string;
+            /** Format: uuid */
+            professorId: string;
+            dias: components["schemas"]["DiaFichaDto"][];
+        };
+        FichaResumoDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            alunoId: string;
+            /** @example Hipertrofia — bloco 1 */
+            nome: string;
+            status: components["schemas"]["StatusDaFicha"];
+            /** Format: date-time */
+            criadaEm: string;
+            /** Format: date-time */
+            atualizadaEm: string;
         };
     };
     responses: never;
@@ -483,6 +689,269 @@ export interface operations {
                 content?: never;
             };
             /** @description Aluno não encontrado (inexistente ou de outro professor). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ExerciciosController_listar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExercicioDto"][];
+                };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ExerciciosController_criar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriarExercicioDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExercicioDto"];
+                };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Nome já existe no catálogo (sem diferença de maiúsculas). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FichasController_listar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alunoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaResumoDto"][];
+                };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Aluno não encontrado (inexistente ou de outro professor). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FichasController_criar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                alunoId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriarFichaDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaDto"];
+                };
+            };
+            /** @description Ficha inválida (faixa, séries, tetos, dia sem item ao ativar) ou exercício indisponível. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Aluno não encontrado (inexistente ou de outro professor). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FichasController_obter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaDto"];
+                };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ficha não encontrada (inexistente ou de outro professor). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FichasController_ativar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FichaDto"];
+                };
+            };
+            /** @description Ficha sem dia, ou com dia sem item. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ficha não encontrada (inexistente ou de outro professor). */
             404: {
                 headers: {
                     [name: string]: unknown;

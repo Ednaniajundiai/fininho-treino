@@ -3,6 +3,13 @@ import type { components, paths } from './schema';
 
 export type Conta = components['schemas']['ContaDto'];
 export type Sessao = components['schemas']['SessaoDto'];
+export type Exercicio = components['schemas']['ExercicioDto'];
+export type Unidade = components['schemas']['Unidade'];
+export type Modalidade = components['schemas']['Modalidade'];
+export type Ficha = components['schemas']['FichaDto'];
+export type FichaResumo = components['schemas']['FichaResumoDto'];
+export type StatusDaFicha = components['schemas']['StatusDaFicha'];
+export type CriarFicha = components['schemas']['CriarFichaDto'];
 
 /**
  * O token de acesso vive só aqui, em memória (contrato autenticacao/C-03): some ao recarregar a
@@ -72,12 +79,20 @@ const autenticacao: Middleware = {
 export const api = createClient<paths>({ baseUrl: '/' });
 api.use(autenticacao);
 
-/** Mensagem de erro da API (campo `message`), ou um texto padrão. */
-export function mensagemDeErro(erro: unknown, padrao: string): string {
+/** Mensagens de erro da API (campo `message`, texto ou lista), ou um texto padrão. */
+export function mensagensDeErro(erro: unknown, padrao: string): string[] {
   if (erro && typeof erro === 'object' && 'message' in erro) {
     const { message } = erro as { message: unknown };
-    if (typeof message === 'string') return message;
-    if (Array.isArray(message) && typeof message[0] === 'string') return message[0];
+    if (typeof message === 'string') return [message];
+    if (Array.isArray(message)) {
+      const textos = message.filter((item): item is string => typeof item === 'string');
+      if (textos.length > 0) return textos;
+    }
   }
-  return padrao;
+  return [padrao];
+}
+
+/** A primeira mensagem de erro da API, ou um texto padrão. */
+export function mensagemDeErro(erro: unknown, padrao: string): string {
+  return mensagensDeErro(erro, padrao)[0] ?? padrao;
 }

@@ -312,6 +312,283 @@
           "alunos"
         ]
       }
+    },
+    "/api/exercicios": {
+      "get": {
+        "operationId": "ExerciciosController_listar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExercicioDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Listar o catálogo do professor logado, com os desativados",
+        "tags": [
+          "exercicios"
+        ]
+      },
+      "post": {
+        "operationId": "ExerciciosController_criar",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarExercicioDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExercicioDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          },
+          "409": {
+            "description": "Nome já existe no catálogo (sem diferença de maiúsculas)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cadastrar exercício no catálogo do professor logado",
+        "tags": [
+          "exercicios"
+        ]
+      }
+    },
+    "/api/alunos/{alunoId}/fichas": {
+      "post": {
+        "operationId": "FichasController_criar",
+        "parameters": [
+          {
+            "name": "alunoId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarFichaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ficha inválida (faixa, séries, tetos, dia sem item ao ativar) ou exercício indisponível."
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          },
+          "404": {
+            "description": "Aluno não encontrado (inexistente ou de outro professor)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Criar ficha para um aluno do professor logado (rascunho ou já ativa)",
+        "tags": [
+          "fichas"
+        ]
+      },
+      "get": {
+        "operationId": "FichasController_listar",
+        "parameters": [
+          {
+            "name": "alunoId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FichaResumoDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          },
+          "404": {
+            "description": "Aluno não encontrado (inexistente ou de outro professor)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Listar as fichas de um aluno do professor logado",
+        "tags": [
+          "fichas"
+        ]
+      }
+    },
+    "/api/fichas/{id}": {
+      "get": {
+        "operationId": "FichasController_obter",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          },
+          "404": {
+            "description": "Ficha não encontrada (inexistente ou de outro professor)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ler uma ficha completa do professor logado",
+        "tags": [
+          "fichas"
+        ]
+      }
+    },
+    "/api/fichas/{id}/ativar": {
+      "post": {
+        "operationId": "FichasController_ativar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FichaDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ficha sem dia, ou com dia sem item."
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          },
+          "404": {
+            "description": "Ficha não encontrada (inexistente ou de outro professor)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ativar a ficha; a ativa anterior do aluno é arquivada",
+        "tags": [
+          "fichas"
+        ]
+      }
     }
   },
   "info": {
@@ -467,6 +744,379 @@
         "required": [
           "aluno",
           "senhaProvisoria"
+        ]
+      },
+      "Unidade": {
+        "type": "string",
+        "enum": [
+          "repeticoes",
+          "segundos"
+        ]
+      },
+      "ExercicioDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string",
+            "example": "Supino reto"
+          },
+          "unidadePadrao": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Unidade"
+              }
+            ]
+          },
+          "ativo": {
+            "type": "boolean",
+            "description": "Desativado some das novas escolhas, mas segue nas fichas que o usam."
+          }
+        },
+        "required": [
+          "id",
+          "nome",
+          "unidadePadrao",
+          "ativo"
+        ]
+      },
+      "CriarExercicioDto": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "example": "Supino reto"
+          },
+          "unidadePadrao": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Unidade"
+              }
+            ]
+          }
+        },
+        "required": [
+          "nome",
+          "unidadePadrao"
+        ]
+      },
+      "TipoDeItem": {
+        "type": "string",
+        "enum": [
+          "forca",
+          "cardio"
+        ]
+      },
+      "Modalidade": {
+        "type": "string",
+        "enum": [
+          "esteira",
+          "bike",
+          "escada",
+          "livre"
+        ],
+        "description": "Cardio."
+      },
+      "ItemFichaEntradaDto": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TipoDeItem"
+              }
+            ]
+          },
+          "observacao": {
+            "type": "string",
+            "example": "Cadência lenta na descida"
+          },
+          "exercicioId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Força: exercício ativo do catálogo."
+          },
+          "series": {
+            "type": "number",
+            "description": "Força: 1 ou mais.",
+            "example": 3
+          },
+          "faixaMin": {
+            "type": "number",
+            "description": "Força: mínimo da faixa.",
+            "example": 8
+          },
+          "faixaMax": {
+            "type": "number",
+            "description": "Força: máximo da faixa.",
+            "example": 12
+          },
+          "unidade": {
+            "description": "Força.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Unidade"
+              }
+            ]
+          },
+          "modalidade": {
+            "description": "Cardio.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Modalidade"
+              }
+            ]
+          },
+          "duracaoMinMin": {
+            "type": "number",
+            "description": "Cardio: duração mínima em minutos.",
+            "example": 10
+          },
+          "duracaoMaxMin": {
+            "type": "number",
+            "description": "Cardio: duração máxima em minutos.",
+            "example": 15
+          }
+        },
+        "required": [
+          "tipo"
+        ]
+      },
+      "DiaFichaEntradaDto": {
+        "type": "object",
+        "properties": {
+          "titulo": {
+            "type": "string",
+            "example": "Peito e tríceps"
+          },
+          "itens": {
+            "description": "Na ordem de execução.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemFichaEntradaDto"
+            }
+          }
+        },
+        "required": [
+          "titulo",
+          "itens"
+        ]
+      },
+      "CriarFichaDto": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "example": "Hipertrofia — bloco 1"
+          },
+          "ativar": {
+            "type": "boolean",
+            "description": "Verdadeiro cria já ativa (arquiva a ativa anterior); senão nasce rascunho.",
+            "default": false
+          },
+          "dias": {
+            "description": "Na ordem da rotação; o rótulo (A, B, C…) vem dessa ordem.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiaFichaEntradaDto"
+            }
+          }
+        },
+        "required": [
+          "nome",
+          "dias"
+        ]
+      },
+      "StatusDaFicha": {
+        "type": "string",
+        "enum": [
+          "rascunho",
+          "ativa",
+          "arquivada"
+        ]
+      },
+      "ItemFichaDto": {
+        "type": "object",
+        "properties": {
+          "ordem": {
+            "type": "number",
+            "example": 1
+          },
+          "tipo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TipoDeItem"
+              }
+            ]
+          },
+          "observacao": {
+            "type": "string"
+          },
+          "exercicioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "exercicioNome": {
+            "type": "string",
+            "description": "Nome do exercício, para quem não vê o catálogo."
+          },
+          "series": {
+            "type": "number"
+          },
+          "faixaMin": {
+            "type": "number"
+          },
+          "faixaMax": {
+            "type": "number"
+          },
+          "unidade": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Unidade"
+              }
+            ]
+          },
+          "modalidade": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Modalidade"
+              }
+            ]
+          },
+          "duracaoMinMin": {
+            "type": "number"
+          },
+          "duracaoMaxMin": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "ordem",
+          "tipo"
+        ]
+      },
+      "DiaFichaDto": {
+        "type": "object",
+        "properties": {
+          "rotulo": {
+            "type": "string",
+            "example": "A"
+          },
+          "titulo": {
+            "type": "string",
+            "example": "Peito e tríceps"
+          },
+          "ordem": {
+            "type": "number",
+            "example": 1
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemFichaDto"
+            }
+          }
+        },
+        "required": [
+          "rotulo",
+          "titulo",
+          "ordem",
+          "itens"
+        ]
+      },
+      "FichaDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "alunoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string",
+            "example": "Hipertrofia — bloco 1"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatusDaFicha"
+              }
+            ]
+          },
+          "criadaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "atualizadaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "professorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiaFichaDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "alunoId",
+          "nome",
+          "status",
+          "criadaEm",
+          "atualizadaEm",
+          "professorId",
+          "dias"
+        ]
+      },
+      "FichaResumoDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "alunoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nome": {
+            "type": "string",
+            "example": "Hipertrofia — bloco 1"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatusDaFicha"
+              }
+            ]
+          },
+          "criadaEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "atualizadaEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "alunoId",
+          "nome",
+          "status",
+          "criadaEm",
+          "atualizadaEm"
         ]
       }
     }

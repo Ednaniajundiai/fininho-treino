@@ -13,16 +13,16 @@ banco de produção.
 
 ## Fase 1: Setup
 
-- [ ] T001 Conferir os nomes do plan contra o código da 001 já na `main` e ajustar os nomes provisórios do plan/tasks se divergirem; registrar o resultado no topo deste arquivo (bloqueia a Fase 2). Pré-conferido na rodada 3 da análise: tabela `users` (model `User`, colunas `@map` snake_case, `teacher_id` = `teacherId`, enum `Role` `PROFESSOR|ALUNO`), `JwtAuthGuard`, `SenhaProvisoriaGuard` e `RolesGuard` globais (`APP_GUARD`, nessa ordem), decorators em `apps/api/src/auth/decorators.ts` (`@Roles('PROFESSOR')` com string, `@UsuarioAtual()` com `{id, role, mustChangePassword}`, `@Public()`, `@PermiteSenhaProvisoria()`), `PrismaService` global em `apps/api/src/prisma/`, e2e em `apps/api/test/` com helpers em `apoio.ts`. Falta só confirmar na `main` que a exceção Vitest/oxlint chegou ao `constitution/stack.md` e `workflow.md` (hoje dizem Jest/ESLint)
-- [ ] T002 [P] Adicionar `react-hook-form` e `zod` (e o resolver do shadcn Form) em `apps/web/package.json`, na versão estável atual
+- [x] T001 Conferir os nomes do plan contra o código da 001 já na `main` e ajustar os nomes provisórios do plan/tasks se divergirem; registrar o resultado no topo deste arquivo (bloqueia a Fase 2). Pré-conferido na rodada 3 da análise: tabela `users` (model `User`, colunas `@map` snake_case, `teacher_id` = `teacherId`, enum `Role` `PROFESSOR|ALUNO`), `JwtAuthGuard`, `SenhaProvisoriaGuard` e `RolesGuard` globais (`APP_GUARD`, nessa ordem), decorators em `apps/api/src/auth/decorators.ts` (`@Roles('PROFESSOR')` com string, `@UsuarioAtual()` com `{id, role, mustChangePassword}`, `@Public()`, `@PermiteSenhaProvisoria()`), `PrismaService` global em `apps/api/src/prisma/`, e2e em `apps/api/test/` com helpers em `apoio.ts`. Falta só confirmar na `main` que a exceção Vitest/oxlint chegou ao `constitution/stack.md` e `workflow.md` (hoje dizem Jest/ESLint)
+- [x] T002 [P] Adicionar `react-hook-form` e `zod` (e o resolver do shadcn Form) em `apps/web/package.json`, na versão estável atual
 
 ## Fase 2: Fundação (Bloqueante)
 
 **CRÍTICO**: nenhuma história começa antes desta fase.
 
-- [ ] T003 Modelar `exercises`, `plans`, `plan_days`, `plan_items` e enums (`REPS|SECONDS`, `DRAFT|ACTIVE|ARCHIVED`, `STRENGTH|CARDIO`, `TREADMILL|BIKE|STAIRS|FREE`) em `apps/api/prisma/schema.prisma` e gerar a migration em `apps/api/prisma/migrations/`, acrescentando à mão: único `(teacher_id, lower(name))`, único parcial `(student_id) WHERE status='ACTIVE'`, únicos `(plan_id, position)` e `(day_id, position)`, `CHECK` por tipo de item (depende de T001)
-- [ ] T004 [P] Criar fixtures de e2e fictícias (professor A, professor B, aluno de A, aluno de B, tokens por papel) em `apps/api/test/apoio-fichas.ts`, reaproveitando `subirApp`, `limparBanco`, `criarProfessor`, `entrar` e `novaOrigem` de `apps/api/test/apoio.ts`. O aluno nasce por `POST /api/alunos` com senha provisória: a fixture entrega o aluno já com senha trocada (`POST /api/auth/trocar-senha`, token novo da resposta) e também uma variante que continua provisória, para testar o 403 (depende de T001)
-- [ ] T005 Criar os módulos vazios `ExerciciosModule` e `FichasModule` (controller/service/DTOs) e registrá-los em `apps/api/src/app.module.ts` (depende de T003)
+- [x] T003 Modelar `exercises`, `plans`, `plan_days`, `plan_items` e enums (`REPS|SECONDS`, `DRAFT|ACTIVE|ARCHIVED`, `STRENGTH|CARDIO`, `TREADMILL|BIKE|STAIRS|FREE`) em `apps/api/prisma/schema.prisma` e gerar a migration em `apps/api/prisma/migrations/`, acrescentando à mão: único `(teacher_id, lower(name))`, único parcial `(student_id) WHERE status='ACTIVE'`, únicos `(plan_id, position)` e `(day_id, position)`, `CHECK` por tipo de item (depende de T001)
+- [x] T004 [P] Criar fixtures de e2e fictícias (professor A, professor B, aluno de A, aluno de B, tokens por papel) em `apps/api/test/apoio-fichas.ts`, reaproveitando `subirApp`, `limparBanco`, `criarProfessor`, `entrar` e `novaOrigem` de `apps/api/test/apoio.ts`. O aluno nasce por `POST /api/alunos` com senha provisória: a fixture entrega o aluno já com senha trocada (`POST /api/auth/trocar-senha`, token novo da resposta) e também uma variante que continua provisória, para testar o 403 (depende de T001)
+- [x] T005 Criar os módulos vazios `ExerciciosModule` e `FichasModule` (controller/service/DTOs) e registrá-los em `apps/api/src/app.module.ts` (depende de T003)
 
 **Checkpoint**: banco migrado, módulos registrados, fixtures prontas.
 
@@ -36,29 +36,29 @@ banco de produção.
 
 ### Testes para a História 1 (escrever primeiro; devem falhar)
 
-- [ ] T006 [P] [US1] Teste de unidade da validação pura: faixa mínima > máxima, séries < 1, cardio com mínimo > máximo (FR-004, cenário 4) em `apps/api/src/fichas/ficha-validation.spec.ts`
-- [ ] T007 [P] [US1] Teste de unidade: ficha sem dia ou dia sem item não ativa; teto de 10 dias e 30 itens por dia (FR-005, cenário 5) em `apps/api/src/fichas/ficha-validation.spec.ts`
-- [ ] T008 [P] [US1] Teste de unidade: rótulo do dia derivado da posição (A, B, C...) sem coluna, e dia com força e cardio misturados na ordem escolhida (FR-003, FR-004, FR-012, cenário 6) em `apps/api/src/fichas/ficha-validation.spec.ts`
-- [ ] T009 [P] [US1] e2e do catálogo: `GET/POST /exercicios` com 401, 403 (aluno), caminho feliz com o exercício aparecendo no catálogo, e catálogo de A invisível para B (FR-001, FR-007, cenário 1) em `apps/api/test/exercicios.e2e-spec.ts`
-- [ ] T010 [P] [US1] e2e: nome duplicado sem diferença de maiúsculas responde 409; o mesmo nome em dois professores é aceito (FR-002, cenário 2) em `apps/api/test/exercicios.e2e-spec.ts`
-- [ ] T011 [P] [US1] e2e `POST /alunos/:alunoId/fichas`: 401, 403 (aluno), 404 (aluno de outro professor, id inexistente e id de um professor, cenário 7) e criação de ficha A-E com força e cardio ativa, lida de volta na ordem definida (FR-003, FR-004, FR-007, FR-012, cenários 3 e 6) em `apps/api/test/fichas.e2e-spec.ts`
-- [ ] T012 [P] [US1] e2e: criação recusa (400) faixa invertida, séries < 1, ficha sem dia/dia sem item ao ativar, e exercício inativo ou do catálogo de outro professor (FR-004, FR-005, FR-011, cenários 4 e 5) em `apps/api/test/fichas.e2e-spec.ts`
-- [ ] T013 [P] [US1] e2e `GET /alunos/:alunoId/fichas` e `GET /fichas/:id`: 401, 403, 404 de outro dono e caminho feliz (FR-007) em `apps/api/test/fichas.e2e-spec.ts`
-- [ ] T014 [P] [US1] e2e `POST /fichas/:id/ativar`: 401, 403, 404 de outro dono; ativar arquiva a anterior do mesmo aluno, que continua legível (FR-006, FR-007) em `apps/api/test/fichas.e2e-spec.ts`
-- [ ] T015 [P] [US1] e2e `lento`: migration do zero, `CHECK` por tipo de item recusa linha inconsistente, e duas ativações simultâneas deixam uma só ficha ativa (índice parcial) (FR-004, FR-006) em `apps/api/test/fichas-db.e2e-spec.ts`
+- [x] T006 [P] [US1] Teste de unidade da validação pura: faixa mínima > máxima, séries < 1, cardio com mínimo > máximo (FR-004, cenário 4) em `apps/api/src/fichas/ficha-validation.spec.ts`
+- [x] T007 [P] [US1] Teste de unidade: ficha sem dia ou dia sem item não ativa; teto de 10 dias e 30 itens por dia (FR-005, cenário 5) em `apps/api/src/fichas/ficha-validation.spec.ts`
+- [x] T008 [P] [US1] Teste de unidade: rótulo do dia derivado da posição (A, B, C...) sem coluna, e dia com força e cardio misturados na ordem escolhida (FR-003, FR-004, FR-012, cenário 6) em `apps/api/src/fichas/ficha-validation.spec.ts`
+- [x] T009 [P] [US1] e2e do catálogo: `GET/POST /exercicios` com 401, 403 (aluno), caminho feliz com o exercício aparecendo no catálogo, e catálogo de A invisível para B (FR-001, FR-007, cenário 1) em `apps/api/test/exercicios.e2e-spec.ts`
+- [x] T010 [P] [US1] e2e: nome duplicado sem diferença de maiúsculas responde 409; o mesmo nome em dois professores é aceito (FR-002, cenário 2) em `apps/api/test/exercicios.e2e-spec.ts`
+- [x] T011 [P] [US1] e2e `POST /alunos/:alunoId/fichas`: 401, 403 (aluno), 404 (aluno de outro professor, id inexistente e id de um professor, cenário 7) e criação de ficha A-E com força e cardio ativa, lida de volta na ordem definida (FR-003, FR-004, FR-007, FR-012, cenários 3 e 6) em `apps/api/test/fichas.e2e-spec.ts`
+- [x] T012 [P] [US1] e2e: criação recusa (400) faixa invertida, séries < 1, ficha sem dia/dia sem item ao ativar, e exercício inativo ou do catálogo de outro professor (FR-004, FR-005, FR-011, cenários 4 e 5) em `apps/api/test/fichas.e2e-spec.ts`
+- [x] T013 [P] [US1] e2e `GET /alunos/:alunoId/fichas` e `GET /fichas/:id`: 401, 403, 404 de outro dono e caminho feliz (FR-007) em `apps/api/test/fichas.e2e-spec.ts`
+- [x] T014 [P] [US1] e2e `POST /fichas/:id/ativar`: 401, 403, 404 de outro dono; ativar arquiva a anterior do mesmo aluno, que continua legível (FR-006, FR-007) em `apps/api/test/fichas.e2e-spec.ts`
+- [x] T015 [P] [US1] e2e `lento`: migration do zero, `CHECK` por tipo de item recusa linha inconsistente, e duas ativações simultâneas deixam uma só ficha ativa (índice parcial) (FR-004, FR-006) em `apps/api/test/fichas-db.e2e-spec.ts`
 
 ### Implementação da História 1
 
-- [ ] T016 [US1] Implementar a validação pura (faixas, séries, ao menos 1 dia/item, tetos, derivação do rótulo) em `apps/api/src/fichas/ficha-validation.ts` (faz T006-T008 passarem)
-- [ ] T017 [P] [US1] Implementar `ExerciciosController`/`ExerciciosService` (`GET`, `POST`, 409 em duplicidade, posse por `teacher_id`) e DTOs com `class-validator` e Swagger em `apps/api/src/exercicios/` (faz T009 e T010 passarem; depende de T005)
-- [ ] T018 [US1] Implementar DTOs de ficha (dias e itens, força e cardio) em `apps/api/src/fichas/dto/` e `FichasService.criar/listarPorAluno/obter` (rascunho ou já ativa, só exercício ativo do próprio professor, posse no service) em `apps/api/src/fichas/fichas.service.ts` (depende de T016, T017)
-- [ ] T019 [US1] Implementar `ativar` em transação (arquiva a ativa do aluno e ativa esta) e o `FichasController` com `@Roles('PROFESSOR')` na classe, `@UsuarioAtual()` para o `id` do professor e Swagger (`POST/GET /alunos/:alunoId/fichas`, `GET /fichas/:id`, `POST /fichas/:id/ativar`) em `apps/api/src/fichas/fichas.controller.ts` (depende de T018; faz T011-T015 passarem)
-- [ ] T020 [P] [US1] Seed de desenvolvimento com exercícios genéricos fictícios em `apps/api/prisma/seed.ts`, registrando-o em `migrations.seed` de `apps/api/prisma7.config.ts` (a 001 não deixou seed nem configuração; depende de T003)
-- [ ] T021 [US1] Regenerar o OpenAPI e os tipos do cliente com `pnpm gen:api` (atualiza `apps/api/openapi.json` e `apps/web/lib/api/schema.d.ts`; depende de T019)
-- [ ] T022 [P] [US1] Tela do catálogo de exercícios (lista, criar, mensagem de duplicidade) em `apps/web/app/exercicios/` (depende de T021, T002)
-- [ ] T023 [US1] Lista de alunos, fichas do aluno e editor com `useFieldArray` (dias e itens de força/cardio, ordem, ativar), validação espelhando o servidor, em `apps/web/app/fichas/` e `apps/web/components/ficha/` (depende de T021, T002)
-- [ ] T024 [US1] Validação manual de FR-013: formulários e ficha em português e usáveis no celular; captura 390px e 1280px, claro e escuro, conferida contra `~/.claude/DESIGN.base.md` (depende de T022, T023)
-- [ ] T025 [US1] Rodar `scripts/gate.sh` e `pnpm --filter api test:e2e`, gravar `specs/002-fichas-treino/ESTADO.md` e commitar a história 1 com a prova (depende de T006-T024)
+- [x] T016 [US1] Implementar a validação pura (faixas, séries, ao menos 1 dia/item, tetos, derivação do rótulo) em `apps/api/src/fichas/ficha-validation.ts` (faz T006-T008 passarem)
+- [x] T017 [P] [US1] Implementar `ExerciciosController`/`ExerciciosService` (`GET`, `POST`, 409 em duplicidade, posse por `teacher_id`) e DTOs com `class-validator` e Swagger em `apps/api/src/exercicios/` (faz T009 e T010 passarem; depende de T005)
+- [x] T018 [US1] Implementar DTOs de ficha (dias e itens, força e cardio) em `apps/api/src/fichas/dto/` e `FichasService.criar/listarPorAluno/obter` (rascunho ou já ativa, só exercício ativo do próprio professor, posse no service) em `apps/api/src/fichas/fichas.service.ts` (depende de T016, T017)
+- [x] T019 [US1] Implementar `ativar` em transação (arquiva a ativa do aluno e ativa esta) e o `FichasController` com `@Roles('PROFESSOR')` na classe, `@UsuarioAtual()` para o `id` do professor e Swagger (`POST/GET /alunos/:alunoId/fichas`, `GET /fichas/:id`, `POST /fichas/:id/ativar`) em `apps/api/src/fichas/fichas.controller.ts` (depende de T018; faz T011-T015 passarem)
+- [x] T020 [P] [US1] Seed de desenvolvimento com exercícios genéricos fictícios em `apps/api/prisma/seed.ts`, registrando-o em `migrations.seed` de `apps/api/prisma7.config.ts` (a 001 não deixou seed nem configuração; depende de T003)
+- [x] T021 [US1] Regenerar o OpenAPI e os tipos do cliente com `pnpm gen:api` (atualiza `apps/api/openapi.json` e `apps/web/lib/api/schema.d.ts`; depende de T019)
+- [x] T022 [P] [US1] Tela do catálogo de exercícios (lista, criar, mensagem de duplicidade) em `apps/web/app/exercicios/` (depende de T021, T002)
+- [x] T023 [US1] Lista de alunos, fichas do aluno e editor com `useFieldArray` (dias e itens de força/cardio, ordem, ativar), validação espelhando o servidor, em `apps/web/app/fichas/` e `apps/web/components/ficha/` (depende de T021, T002)
+- [x] T024 [US1] Validação manual de FR-013: formulários e ficha em português e usáveis no celular; captura 390px e 1280px, claro e escuro, conferida contra `~/.claude/DESIGN.base.md` (depende de T022, T023)
+- [x] T025 [US1] Rodar `scripts/gate.sh` e `pnpm --filter api test:e2e`, gravar `specs/002-fichas-treino/ESTADO.md` e commitar a história 1 com a prova (depende de T006-T024)
 
 **Checkpoint**: professor monta e ativa uma ficha A-E completa; história 1 testável sozinha.
 
@@ -146,3 +146,17 @@ banco de produção.
 - Teste de migration e de concorrência (T015) leva o marcador `lento` (roda só na CI).
 - Se a 003 passar a referenciar itens da ficha, revisar D-02 (`PUT` troca ids de dia e item).
 - `DRAFT` é estado extra além do contrato; aprovado pelo dono em 2026-11-17 (registrar em `fichas/C-01` no T050). A cópia de `duplicar` nasce `DRAFT`.
+
+## Registro de execução
+
+**História 1 (Setup e Fundação incluídos)** — API e front prontos.
+- T001: nomes do plan conferidos contra a 001 na `main` (`users`, `teacher_id`, `Role`, guards globais, `@Roles('PROFESSOR')`, `@UsuarioAtual()`, `apoio.ts`). `constitution/stack.md` e `workflow.md` ainda dizem Jest e ESLint; a emenda é do dono e esta feature só registra a exceção (Vitest e oxlint).
+- Valores da API seguem `fichas/C-01` em português (`forca`, `repeticoes`, `esteira`, `rascunho`); o banco guarda os enums em inglês do plan; conversão em `apps/api/src/fichas/valores.ts`.
+- Item de força ganhou `exercicioNome` na resposta (o aluno da US2 precisa do nome); registrar em `fichas/C-01` no T050.
+- Ativação: transação mais `SELECT ... FOR UPDATE` na linha do aluno; sem a trava, duas ativações simultâneas davam 500 antes de o índice parcial barrar. Provado removendo a trava e vendo o teste falhar.
+- Rascunho pode ficar sem dia ou com dia vazio; o mínimo de 1 dia e 1 item por dia vale só para ficha ativa (FR-005). Tetos valem sempre.
+- Limites de formato nos DTOs que a spec não define: nomes 1–100, título do dia até 80, observação até 500, séries até 100, faixa 1–9999, duração 1–999.
+- Ativar ficha arquivada ainda não é recusado: é o T042 (US3).
+- Seed de dev idempotente, recusa `NODE_ENV=production`; rodou no banco de dev (34 exercícios fictícios, 17 por professor).
+- Front: validação manual do FR-013 por captura (editor e catálogo em 390px e 1280px, claro e escuro). Erros de formato do class-validator na API continuam em inglês; o front valida igual para a pessoa não vê-los.
+- Pendência: `design:accessibility-review` não rodada (fica para o Polimento).

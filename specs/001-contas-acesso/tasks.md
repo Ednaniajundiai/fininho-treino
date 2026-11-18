@@ -136,11 +136,11 @@ aluno; sair e entrar com a nova.
 
 ## Fase 6: Polimento e Preocupações Transversais
 
-- [ ] T050 Revisar a cobertura de teste contra os FRs da spec e a regra do `workflow.md`: toda rota com 401, 403, dado de outro dono e caminho feliz (SC-003); apagar teste duplicado
-- [ ] T051 Checagem de segurança: nenhum log com senha, token ou hash; `.env.example` com todas as variáveis; nenhum dado real em seed, teste ou captura; sem `console.log` de depuração
-- [ ] T052 Aplicar "Contratos tocados" em `specs/_sistema/autenticacao.md` (C-01, C-02, C-03)
-- [ ] T053 Rodar o roteiro do SC-001 num clone limpo seguindo só o `README.md`
-- [ ] T054 Gravar `specs/001-contas-acesso/retro.md` e rodar o gate final e os gates de PR do `workflow.md` (lint, formatação, tipos, unidade, e2e, build)
+- [x] T050 Revisar a cobertura de teste contra os FRs da spec e a regra do `workflow.md`: toda rota com 401, 403, dado de outro dono e caminho feliz (SC-003); apagar teste duplicado
+- [x] T051 Checagem de segurança: nenhum log com senha, token ou hash; `.env.example` com todas as variáveis; nenhum dado real em seed, teste ou captura; sem `console.log` de depuração
+- [x] T052 Aplicar "Contratos tocados" em `specs/_sistema/autenticacao.md` (C-01, C-02, C-03)
+- [x] T053 Rodar o roteiro do SC-001 num clone limpo seguindo só o `README.md`
+- [x] T054 Gravar `specs/001-contas-acesso/retro.md` e rodar o gate final e os gates de PR do `workflow.md` (lint, formatação, tipos, unidade, e2e, build)
 
 ## Dependências e Ordem de Execução
 
@@ -206,3 +206,17 @@ Feitas num commit só: a base não tem como ser provada sem a primeira rota.
   sessão.
 - **Capturas**: troca de senha em 1280px claro e inicial de aluno em 390px escuro.
 - **Pendências**: nenhuma.
+
+### Polimento (2026-11-18)
+
+- **Feito**: T050 a T054. Cobertura conferida pelas três revisões (toda rota com 401, 403 onde
+  há papel, dado de outro dono onde há dono, e caminho feliz). Segurança: nenhum `console.log`
+  de depuração, nenhum log com senha, token ou hash, só contas `*@exemplo.test`, nenhum `.env`
+  versionado. Contratos C-01 a C-03 aplicados em `specs/_sistema/autenticacao.md`.
+- **SC-001 (clone limpo)**: clone da branch numa pasta temporária, `pnpm install`, `.env` a
+  partir do exemplo, `docker compose up -d`, `pnpm db:migrate`, build da API, comando de criar
+  professor e API de pé com saúde, login (200) e `/api/docs` respondendo. **Limite da prova**: o
+  clone usou o mesmo volume do Postgres deste worktree (banco já migrado), e o front não foi
+  aberto a partir do clone; as migrations do zero são provadas pelo e2e, e o front, pelo roteiro
+  manual neste worktree.
+- **SC-002 (CI verde)**: não verificado. A CI só roda com push, que espera o sim do dono.

@@ -33,34 +33,43 @@ export class SessoesService {
 
   /** Novo login: nova família. */
   abrir(usuario: User): Promise<Sessao> {
-    return this.emitir(usuario, randomUUID());
+    return this.emitir(usuario, randomUUID(), this.prisma);
   }
 
   /**
    * Gira o token: o apresentado deixa de valer e outro é emitido na mesma família.
    * Token já usado que reaparece indica roubo: a família inteira é revogada.
+   *
+   * Tudo numa transação só. Se o mesmo token chega duas vezes ao mesmo tempo, o UPDATE da
+   * segunda espera a primeira confirmar, não altera nenhuma linha (já foi usado) e vira reuso;
+   * a essa altura o token novo da primeira já está gravado e é revogado junto com a família.
    */
   async renovar(valor: string): Promise<Sessao> {
     const agora = new Date();
-    const token = await this.prisma.refreshToken.findUnique({
-      where: { tokenHash: hashDoToken(valor) },
+    const sessao = await this.prisma.$transaction(async (tx) => {
+      const token = await tx.refreshToken.findUnique({
+        where: { tokenHash: hashDoToken(valor) },
+      });
+      if (!token) return null;
+
+      let decisao = decidirRotacao(token, agora);
+      if (decisao === 'VALIDO') {
+        const { count } = await tx.refreshToken.updateMany({
+          where: { id: token.id, usedAt: null, revokedAt: null },
+          data: { usedAt: agora },
+        });
+        if (count === 0) decisao = 'REUSO';
+      }
+      if (decisao === 'REUSO') await this.revogarFamilia(token.familyId, tx);
+      // Sem lançar aqui dentro: a revogação precisa ser confirmada junto com a transação.
+      if (decisao !== 'VALIDO') return null;
+
+      const usuario = await tx.user.findUniqueOrThrow({ where: { id: token.userId } });
+      return this.emitir(usuario, token.familyId, tx);
     });
 
-    let decisao = decidirRotacao(token, agora);
-    if (token && decisao === 'VALIDO') {
-      // Marca como usado só se ainda não foi: duas renovações simultâneas do mesmo token não
-      // passam as duas. Quem perde a corrida é tratado como reuso.
-      const { count } = await this.prisma.refreshToken.updateMany({
-        where: { id: token.id, usedAt: null, revokedAt: null },
-        data: { usedAt: agora },
-      });
-      if (count === 0) decisao = 'REUSO';
-    }
-    if (token && decisao === 'REUSO') await this.revogarFamilia(token.familyId);
-    if (!token || decisao !== 'VALIDO') throw new UnauthorizedException('Não autenticado.');
-
-    const usuario = await this.prisma.user.findUniqueOrThrow({ where: { id: token.userId } });
-    return this.emitir(usuario, token.familyId);
+    if (!sessao) throw new UnauthorizedException('Não autenticado.');
+    return sessao;
   }
 
   /** Logout: encerra o login do aparelho que apresentou o token. Token desconhecido: nada a fazer. */
@@ -68,7 +77,7 @@ export class SessoesService {
     const token = await this.prisma.refreshToken.findUnique({
       where: { tokenHash: hashDoToken(valor) },
     });
-    if (token) await this.revogarFamilia(token.familyId);
+    if (token) await this.revogarFamilia(token.familyId, this.prisma);
   }
 
   /**
@@ -89,16 +98,20 @@ export class SessoesService {
     });
   }
 
-  private async revogarFamilia(familyId: string): Promise<void> {
-    await this.prisma.refreshToken.updateMany({
+  private async revogarFamilia(familyId: string, db: Prisma.TransactionClient): Promise<void> {
+    await db.refreshToken.updateMany({
       where: { familyId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
   }
 
-  private async emitir(usuario: User, familyId: string): Promise<Sessao> {
+  private async emitir(
+    usuario: User,
+    familyId: string,
+    db: Prisma.TransactionClient,
+  ): Promise<Sessao> {
     const renovacao = gerarTokenRenovacao();
-    await this.prisma.refreshToken.create({
+    await db.refreshToken.create({
       data: {
         userId: usuario.id,
         familyId,

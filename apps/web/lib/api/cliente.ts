@@ -42,23 +42,30 @@ export function renovarSessao(): Promise<Sessao | null> {
   return renovacaoEmCurso;
 }
 
+// Login, renovação e logout não se repetem: neles o 401 é a resposta final.
+const SEM_REPETICAO = ['/api/auth/login', '/api/auth/refresh', '/api/auth/logout'];
+// Cópia de cada requisição ainda com o corpo intacto, para poder repeti-la depois de renovar.
+const copias = new Map<string, Request>();
+
 const autenticacao: Middleware = {
-  onRequest({ request }) {
+  onRequest({ request, id }) {
     if (accessToken) request.headers.set('Authorization', `Bearer ${accessToken}`);
+    if (!SEM_REPETICAO.includes(new URL(request.url).pathname)) copias.set(id, request.clone());
     return request;
   },
   // Token de acesso vencido (15 min): renova uma vez e repete a mesma requisição.
-  async onResponse({ request, response }) {
-    const rotaDeAuth = new URL(request.url).pathname.startsWith('/api/auth/');
-    if (response.status !== 401 || rotaDeAuth || request.headers.has('X-Repetida')) {
-      return response;
-    }
+  async onResponse({ response, id }) {
+    const copia = copias.get(id);
+    copias.delete(id);
+    if (response.status !== 401 || !copia) return response;
+
     const sessao = await renovarSessao();
     if (!sessao) return response;
-    const repetida = new Request(request, { headers: new Headers(request.headers) });
-    repetida.headers.set('Authorization', `Bearer ${sessao.accessToken}`);
-    repetida.headers.set('X-Repetida', '1');
-    return fetch(repetida);
+    copia.headers.set('Authorization', `Bearer ${sessao.accessToken}`);
+    return fetch(copia);
+  },
+  onError({ id }) {
+    copias.delete(id);
   },
 };
 

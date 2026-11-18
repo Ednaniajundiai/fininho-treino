@@ -87,6 +87,48 @@ describe('sessão de acesso: renovação e logout', () => {
     expect((await renovar(computador.cookie)).status).toBe(200);
   });
 
+  it('o token de acesso vale 15 minutos e o de renovação 7 dias, recontados a cada renovação (FR-007)', async () => {
+    const prisma = app.get(PrismaService);
+    const seteDias = 7 * 24 * 60 * 60 * 1000;
+    const prazoDoAcesso = (accessToken: string) => {
+      const payload = JSON.parse(
+        Buffer.from(accessToken.split('.')[1] ?? '', 'base64url').toString(),
+      ) as { iat: number; exp: number };
+      return payload.exp - payload.iat;
+    };
+    const prazoDaRenovacaoMaisNova = async () => {
+      const token = await prisma.refreshToken.findFirstOrThrow({ orderBy: { createdAt: 'desc' } });
+      return token.expiresAt.getTime() - Date.now();
+    };
+
+    const login = await entrar(app, PAULA);
+    expect(prazoDoAcesso(login.accessToken)).toBe(15 * 60);
+    expect(Math.abs((await prazoDaRenovacaoMaisNova()) - seteDias)).toBeLessThan(60_000);
+
+    // Envelhece o token atual: a renovação conta 7 dias de novo, a partir dela.
+    await prisma.refreshToken.updateMany({ data: { expiresAt: new Date(Date.now() + 60_000) } });
+    const renovacao = await renovar(login.cookie);
+    expect(prazoDoAcesso(renovacao.body.accessToken)).toBe(15 * 60);
+    expect(Math.abs((await prazoDaRenovacaoMaisNova()) - seteDias)).toBeLessThan(60_000);
+  });
+
+  it('duas renovações simultâneas do mesmo token não deixam nenhum token vivo (FR-008)', async () => {
+    const { cookie } = await entrar(app, PAULA);
+
+    const respostas = await Promise.all([renovar(cookie), renovar(cookie)]);
+
+    // No máximo uma passa; a outra é reuso e revoga a família, inclusive o token recém-emitido.
+    expect(respostas.filter((resposta) => resposta.status === 200).length).toBeLessThanOrEqual(1);
+    for (const resposta of respostas) {
+      const emitido = cookieDeRenovacao(resposta);
+      if (resposta.status === 200 && emitido) expect((await renovar(emitido)).status).toBe(401);
+    }
+    const vivos = await app
+      .get(PrismaService)
+      .refreshToken.count({ where: { usedAt: null, revokedAt: null } });
+    expect(vivos).toBe(0);
+  });
+
   it('token de renovação vencido responde 401 (FR-007)', async () => {
     const { cookie } = await entrar(app, PAULA);
     await app

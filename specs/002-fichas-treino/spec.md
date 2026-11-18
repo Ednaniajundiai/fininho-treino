@@ -171,7 +171,7 @@ tem carga no item. A recomendação é manter sem carga e corrigir o BOARD na PR
 
 ## Exceções à Constituição
 
-- Sem exceções — segue a constituição integralmente (a confirmar no plan).
+- `stack.md` (Testes: Jest; lint: ESLint): a API usa Vitest e oxlint, a mesma exceção aprovada pelo dono na `001-contas-acesso` (D-15). Sem outra exceção.
 
 ---
 

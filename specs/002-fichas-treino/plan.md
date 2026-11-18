@@ -62,7 +62,7 @@ não · configuração sem segundo uso não
 **Dependências Principais**: herdado; adiciona `react-hook-form` e `zod` no web (versão estável
 atual conferida na instalação).
 
-**Armazenamento**: PostgreSQL. Quatro tabelas (nomes provisórios; ajustar à 001):
+**Armazenamento**: PostgreSQL. Quatro tabelas (nomes conferidos na 001: `users`, `teacher_id`, `@map` snake_case):
 
 ```text
 exercises   id uuid pk · teacher_id fk users(id) · name · default_unit (REPS | SECONDS)
@@ -138,7 +138,7 @@ pela 003). Ficha arquivada é só leitura (FR-014): `PUT`, `ativar` e `arquivar`
   service, `@Roles()`.
 - **V. Contrato da API é a fonte**: respeita. Swagger, tipos gerados no front.
 
-Sem violações; a exceção da 001 (Vitest e oxlint) é herdada.
+Sem violações novas. Herda a exceção da 001, aprovada pelo dono (D-15): a API usa Vitest e oxlint no lugar de Jest e ESLint do `stack.md`; a emenda da constituição é decisão do dono, ainda não tomada, e esta feature não a edita.
 
 ## Estrutura do Projeto
 
@@ -183,6 +183,7 @@ IV); sem pacote compartilhado.
   não aponta para itens. Se a 003 passar a referenciar item, revisar D-02.
 - **`DRAFT`**: estado extra além do contrato; contido na API (aluno e 003 só veem `ACTIVE`). Aprovado pelo dono em 2026-11-17; registrar em `fichas/C-01` no fechamento (T050). A cópia feita por `duplicar` nasce `DRAFT`.
   Confirmar na aprovação ou remover e criar já ativa.
+- **Token de acesso do aluno vale até 15 min** depois de o professor redefinir a senha dele (`autenticacao/C-03`, retro da 001). Aceito; sem teste.
 - **Migration**: segunda do projeto, sem dado a preservar antes da 005.
 
 ## Rastreamento de Complexidade

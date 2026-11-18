@@ -51,3 +51,32 @@
 - `specs/_sistema/fichas.md` segue só com `ativa | arquivada`; a divergência já está tratada (melhoria 1, T050). Nenhum conflito novo.
 
 **Bloqueantes novos**: nenhum. Fim das rodadas (limite de 2).
+
+## Rodada 3 (pós-merge da 001, foco em autenticação)
+
+**Escopo**: FR-007, FR-008 e as tarefas de rota, posse e e2e de autorização contra `specs/_sistema/autenticacao.md` (C-01 a C-03 atualizados) e o código real da 001 em `apps/api`. **Veredito: PRONTO** (nenhum bloqueante que exija mudar spec ou plan).
+
+### Bloqueantes (3, todos mecânicos e corrigidos no `tasks.md`)
+
+1. **T004 apontava `apps/api/test/helpers/fichas.ts`, e a pasta `helpers` não existe.** Os helpers reais estão em `apps/api/test/apoio.ts` (`subirApp`, `limparBanco`, `criarProfessor`, `entrar`, `novaOrigem`). Pior: o aluno nasce com senha provisória e, pelo C-02, recebe 403 em qualquer rota nova até trocar a senha; sem a fixture trocar a senha, todo e2e de aluno (T026-T028) falharia por motivo errado. **Corrigido**: T004 vira `test/apoio-fichas.ts`, importa de `apoio.ts`, entrega o aluno já com senha trocada (`POST /api/auth/trocar-senha`) e uma variante ainda provisória.
+2. **`@Roles(PROFESSOR)` / `@Roles(ALUNO)` (T019, T029) não compilam.** O decorator real recebe strings (`@Roles('PROFESSOR')`) e o id vem de `@UsuarioAtual()`. **Corrigido** nas duas tarefas.
+3. **T020 pressupunha `apps/api/prisma/seed.ts` e a 001 não deixou seed nem configuração.** Em Prisma 7 o seed se registra em `migrations.seed` de `apps/api/prisma7.config.ts`. **Corrigido** em T020. (T021/T030/T045 também mandavam regenerar só `lib/api`; o fluxo real é `pnpm gen:api`, que atualiza `apps/api/openapi.json` e `apps/web/lib/api/schema.d.ts`. Corrigido.)
+
+### Melhorias (4, aplicadas no `tasks.md`)
+
+1. **Senha provisória negada por padrão**: confirmado no código (`SenhaProvisoriaGuard` global, depois do `JwtAuthGuard` e antes do `RolesGuard`; falha fechada se o token não tiver `mcp`). Faltava teste: T026 agora exige 403 para aluno com senha provisória em `GET /minha-ficha` (e 401 com token inválido); T051 exige que nenhuma rota de `fichas`/`exercicios` tenha `@PermiteSenhaProvisoria()` ou `@Public()`.
+2. **404 de `POST /alunos/:alunoId/fichas`** (T011): agora cobre aluno de outro professor, id inexistente e id de um professor (a posse deve filtrar `role = 'ALUNO'` e `teacherId`, como o `UsuariosService`).
+3. **O gate não roda e2e** (`scripts/gate.sh`: lint, tipos e unidade), e toda a cobertura 401/403/404 está em e2e. Cabeçalho do `tasks.md` e T025/T033/T048 passam a exigir `pnpm --filter api test:e2e` antes de cada commit de história; o comando por tarefa para e2e é `test:e2e -- <caminho>` (o `test` não os inclui).
+4. **Retro da 001**: (a) gravar `ESTADO.md` ao fim de cada história entrou em T025/T033/T048; (b) o risco do token de acesso válido por até 15 min depois de redefinição de senha entrou em T051 (para a retro da 002), aceito sem teste de revogação imediata, como diz o C-03.
+
+### Conferido sem divergência
+
+- T001 pré-conferido (registrado na própria tarefa): `users`/`User`, `teacherId` com `@map("teacher_id")`, `Role` `PROFESSOR|ALUNO`, guards globais, `PrismaService` global, Vitest e oxlint. `limparBanco` faz `TRUNCATE users CASCADE`, então as FKs novas para `users` limpam junto. O `AlunosController` (em `src/usuarios/`, não `src/alunos/`) é o padrão de `@Roles` na classe e posse no service.
+- Cobertura 401/403/404: toda rota nova com id tem 404 de outro dono (T011, T013, T014, T034, T037, T039, T040); `GET/POST /exercicios` e `GET /minha-ficha` não têm id, logo sem 404 (correto pelo C-01: `/minha-ficha` filtra pelo id do token).
+- C-03 (claim `mcp`, mesma origem, logout público) não toca rotas da 002.
+
+### Exige mudança em spec ou plan (não alterados; nenhum bloqueia)
+
+- **plan** (linhas 13 e 65): os "nomes provisórios" já têm resposta (T001 pré-conferido); pode trocar por "conferidos na 001".
+- **plan/spec** (Riscos): acrescentar o risco herdado da 001 (token de acesso do aluno vale até 15 min depois de redefinição de senha; aceito, é leitura da própria ficha).
+- **`constitution/stack.md` e `workflow.md`** ainda dizem Jest/ESLint (emenda pendente da 001, citada na retro); T001 cobre a conferência, a emenda é do dono.

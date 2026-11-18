@@ -31,9 +31,9 @@ export class SessoesService {
     private readonly jwt: JwtService,
   ) {}
 
-  /** Novo login: nova família. */
-  abrir(usuario: User): Promise<Sessao> {
-    return this.emitir(usuario, randomUUID(), this.prisma);
+  /** Novo login: nova família. Aceita o cliente de uma transação em curso (troca de senha). */
+  abrir(usuario: User, opcoes: { tx?: Prisma.TransactionClient } = {}): Promise<Sessao> {
+    return this.emitir(usuario, randomUUID(), opcoes.tx ?? this.prisma);
   }
 
   /**

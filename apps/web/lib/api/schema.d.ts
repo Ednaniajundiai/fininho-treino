@@ -363,6 +363,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Mais de 5 tentativas em um minuto da mesma origem. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     AlunosController_listar: {

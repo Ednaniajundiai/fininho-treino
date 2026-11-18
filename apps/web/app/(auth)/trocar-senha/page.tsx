@@ -77,7 +77,7 @@ export default function TrocarSenhaPage() {
             required
           />
           <p id="dica-da-senha" className="text-sm text-muted-foreground">
-            Pelo menos 8 caracteres.
+            De 8 a 128 caracteres.
           </p>
         </div>
         <div className="flex flex-col gap-1.5">

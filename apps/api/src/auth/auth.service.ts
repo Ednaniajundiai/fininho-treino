@@ -45,14 +45,21 @@ export class AuthService {
     }
 
     const passwordHash = await gerarHashDaSenha(novaSenha);
-    const atualizado = await this.prisma.$transaction(async (tx) => {
+    const sessao = await this.prisma.$transaction(async (tx) => {
+      // Trava as sessões da conta, derruba todas e abre a nova na mesma transação.
       await this.sessoes.revogarDoUsuario(usuario.id, { tx });
-      return tx.user.update({
-        where: { id: usuario.id },
+      // Só troca se a senha ainda é a que foi conferida acima: se o professor redefiniu a
+      // senha no meio do caminho, a redefinição prevalece.
+      const { count } = await tx.user.updateMany({
+        where: { id: usuario.id, passwordHash: usuario.passwordHash },
         data: { passwordHash, mustChangePassword: false },
       });
+      if (count === 0) return null;
+      const atualizado = await tx.user.findUniqueOrThrow({ where: { id: usuario.id } });
+      return this.sessoes.abrir(atualizado, { tx });
     });
-    return this.sessoes.abrir(atualizado);
+    if (!sessao) throw new BadRequestException('Senha atual incorreta.');
+    return sessao;
   }
 
   async minhaConta(id: string): Promise<User> {

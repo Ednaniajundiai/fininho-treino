@@ -39,7 +39,8 @@ export class JwtAuthGuard implements CanActivate {
       requisicao.usuario = {
         id: payload.sub,
         role: payload.role,
-        mustChangePassword: payload.mcp,
+        // Falha fechada: token sem a marca é tratado como senha provisória.
+        mustChangePassword: payload.mcp !== false,
       };
     } catch {
       // Assinatura inválida ou token vencido: a resposta não diz qual dos dois.

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint --max-warnings 0",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "node scripts/limpar-tipos-dev.mjs && next typegen && tsc --noEmit",
     "gen:api": "openapi-typescript ../api/openapi.json -o lib/api/schema.d.ts"
   },
   "dependencies": {

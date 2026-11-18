@@ -172,6 +172,9 @@
           },
           "401": {
             "description": "Não autenticado."
+          },
+          "429": {
+            "description": "Mais de 5 tentativas em um minuto da mesma origem."
           }
         },
         "security": [

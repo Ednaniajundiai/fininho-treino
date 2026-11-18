@@ -6,6 +6,7 @@ import {
   criarProfessor,
   entrar,
   limparBanco,
+  novaOrigem,
   PAULA,
   subirApp,
 } from './apoio.js';
@@ -21,7 +22,8 @@ describe('senha provisória e troca de senha', () => {
 
   const http = () => request(app.getHttpServer());
   const trocar = (token: string | null, corpo: { senhaAtual: string; novaSenha: string }) => {
-    const pedido = http().post('/api/auth/trocar-senha');
+    // Origem nova a cada chamada, para o limite de tentativas de um teste não pegar o outro.
+    const pedido = http().post('/api/auth/trocar-senha').set('X-Forwarded-For', novaOrigem());
     return (token ? pedido.set('Authorization', `Bearer ${token}`) : pedido).send(corpo);
   };
   const entrarComoAri = (senha = provisoria) => entrar(app, { email: ARI.email, senha });
@@ -149,6 +151,22 @@ describe('senha provisória e troca de senha', () => {
         .set('Authorization', `Bearer ${troca.body.accessToken}`);
 
       expect(listar.status).toBe(200);
+    });
+
+    it('na 6ª tentativa em um minuto da mesma origem responde 429 (FR-006)', async () => {
+      const ari = await entrarComoAri();
+      const origem = novaOrigem();
+      const tentar = () =>
+        http()
+          .post('/api/auth/trocar-senha')
+          .set('X-Forwarded-For', origem)
+          .set('Authorization', `Bearer ${ari.accessToken}`)
+          .send({ senhaAtual: 'nao-e-a-provisoria', novaSenha: NOVA });
+
+      for (let tentativa = 1; tentativa <= 5; tentativa += 1) {
+        expect((await tentar()).status).toBe(400);
+      }
+      expect((await tentar()).status).toBe(429);
     });
 
     it.each([

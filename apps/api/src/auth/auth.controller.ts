@@ -112,6 +112,9 @@ export class AuthController {
   }
 
   @PermiteSenhaProvisoria()
+  // Mesmo limite do login: a rota confere uma senha, então também não pode ser martelada.
+  @UseGuards(LimiteDeLoginGuard)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('trocar-senha')
   @HttpCode(200)
   @ApiBearerAuth()
@@ -125,6 +128,7 @@ export class AuthController {
     description: 'Senha atual incorreta, ou nova senha fora da política ou igual à atual.',
   })
   @ApiUnauthorizedResponse({ description: 'Não autenticado.' })
+  @ApiTooManyRequestsResponse({ description: 'Mais de 5 tentativas em um minuto da mesma origem.' })
   async trocarSenha(
     @UsuarioAtual() usuario: UsuarioAutenticado,
     @Body() dto: TrocarSenhaDto,

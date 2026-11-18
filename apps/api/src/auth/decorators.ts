@@ -19,7 +19,8 @@ export const Roles = (...papeis: Role[]) => SetMetadata(PAPEIS_PERMITIDOS, papei
 export const PERMITE_SENHA_PROVISORIA = 'permiteSenhaProvisoria';
 /**
  * Conta com senha provisória recebe 403 em toda rota, salvo as marcadas com este decorator:
- * trocar a senha e consultar a própria conta (contrato autenticacao/C-02).
+ * trocar a senha e consultar a própria conta (contrato autenticacao/C-02). Renovar a sessão e
+ * sair também passam, por serem @Public().
  */
 export const PermiteSenhaProvisoria = () => SetMetadata(PERMITE_SENHA_PROVISORIA, true);
 

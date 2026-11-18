@@ -74,6 +74,17 @@ export class FichasService {
   }
 
   /**
+   * A ficha ativa do aluno logado (FR-008), ou null. O id vem do token: o aluno só alcança a
+   * dele, e rascunho e arquivada nunca saem por aqui.
+   */
+  async ativaDoAluno(alunoId: string): Promise<FichaCompleta | null> {
+    return this.prisma.plan.findFirst({
+      where: { studentId: alunoId, status: 'ACTIVE' },
+      include: FICHA_COMPLETA,
+    });
+  }
+
+  /**
    * Arquiva a ativa do aluno e ativa esta, na mesma transação (FR-006, D-03). Ativar a que já
    * está ativa não muda nada.
    */

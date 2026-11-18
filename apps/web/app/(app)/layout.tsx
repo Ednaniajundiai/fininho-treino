@@ -8,12 +8,16 @@ import { Button } from '@/components/ui/button';
 import { useSessao } from '@/lib/sessao';
 import { cn } from '@/lib/utils';
 
-// Menu do professor. O aluno não vê estes links: a API responderia 403 a todas essas telas.
-const MENU_DO_PROFESSOR = [
-  { href: '/alunos', rotulo: 'Alunos' },
-  { href: '/exercicios', rotulo: 'Exercícios' },
-  { href: '/fichas', rotulo: 'Fichas' },
-];
+// Menu por papel: cada um só vê os links das telas que a API deixa ele abrir (as do professor
+// respondem 403 ao aluno, e /minha-ficha responde 403 ao professor).
+const MENU = {
+  PROFESSOR: [
+    { href: '/alunos', rotulo: 'Alunos' },
+    { href: '/exercicios', rotulo: 'Exercícios' },
+    { href: '/fichas', rotulo: 'Fichas' },
+  ],
+  ALUNO: [{ href: '/minha-ficha', rotulo: 'Minha ficha' }],
+};
 
 /**
  * Área logada. Só esconde o que a API já negaria: sem sessão, leva para /entrar. A
@@ -57,26 +61,24 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </Button>
           </div>
         </div>
-        {sessao.usuario.papel === 'PROFESSOR' ? (
-          <nav aria-label="Menu" className="mx-auto flex w-full max-w-3xl gap-1 px-2 pb-1">
-            {MENU_DO_PROFESSOR.map((item) => {
-              const atual = caminho === item.href || caminho.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={atual ? 'page' : undefined}
-                  className={cn(
-                    'flex min-h-11 items-center rounded-control px-3 text-sm hover:text-foreground',
-                    atual ? 'bg-border/60 font-medium text-foreground' : 'text-muted-foreground',
-                  )}
-                >
-                  {item.rotulo}
-                </Link>
-              );
-            })}
-          </nav>
-        ) : null}
+        <nav aria-label="Menu" className="mx-auto flex w-full max-w-3xl gap-1 px-2 pb-1">
+          {MENU[sessao.usuario.papel].map((item) => {
+            const atual = caminho === item.href || caminho.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={atual ? 'page' : undefined}
+                className={cn(
+                  'flex min-h-11 items-center rounded-control px-3 text-sm hover:text-foreground',
+                  atual ? 'bg-border/60 font-medium text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {item.rotulo}
+              </Link>
+            );
+          })}
+        </nav>
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">{children}</main>
     </>

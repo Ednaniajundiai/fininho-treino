@@ -216,6 +216,16 @@ export class FichaDto extends FichaResumoDto {
   dias!: DiaFichaDto[];
 }
 
+/** Resposta de GET /minha-ficha: a ficha ativa do aluno, ou null quando ele não tem uma. */
+export class MinhaFichaDto {
+  @ApiProperty({
+    type: FichaDto,
+    nullable: true,
+    description: 'A ficha ativa do aluno logado; null se não há ficha ativa.',
+  })
+  ficha!: FichaDto | null;
+}
+
 /** O que o service carrega para montar a ficha completa: dias e itens em ordem. */
 export const FICHA_COMPLETA = {
   days: {

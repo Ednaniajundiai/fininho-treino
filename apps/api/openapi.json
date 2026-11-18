@@ -589,6 +589,39 @@
           "fichas"
         ]
       }
+    },
+    "/api/minha-ficha": {
+      "get": {
+        "operationId": "MinhaFichaController_obter",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MinhaFichaDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só aluno, já com a senha trocada."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ler a ficha ativa do aluno logado (nunca rascunho nem arquivada)",
+        "tags": [
+          "fichas"
+        ]
+      }
     }
   },
   "info": {
@@ -1117,6 +1150,24 @@
           "status",
           "criadaEm",
           "atualizadaEm"
+        ]
+      },
+      "MinhaFichaDto": {
+        "type": "object",
+        "properties": {
+          "ficha": {
+            "nullable": true,
+            "description": "A ficha ativa do aluno logado; null se não há ficha ativa.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FichaDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ficha"
         ]
       }
     }

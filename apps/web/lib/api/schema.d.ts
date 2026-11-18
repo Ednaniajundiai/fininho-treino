@@ -214,6 +214,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/minha-ficha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ler a ficha ativa do aluno logado (nunca rascunho nem arquivada) */
+        get: operations["MinhaFichaController_obter"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -399,6 +416,10 @@ export interface components {
             criadaEm: string;
             /** Format: date-time */
             atualizadaEm: string;
+        };
+        MinhaFichaDto: {
+            /** @description A ficha ativa do aluno logado; null se não há ficha ativa. */
+            ficha: components["schemas"]["FichaDto"] | null;
         };
     };
     responses: never;
@@ -953,6 +974,39 @@ export interface operations {
             };
             /** @description Ficha não encontrada (inexistente ou de outro professor). */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MinhaFichaController_obter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MinhaFichaDto"];
+                };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só aluno, já com a senha trocada. */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

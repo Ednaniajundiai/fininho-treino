@@ -36,7 +36,11 @@ export default function InicioPage() {
               <Link href="/exercicios">Catálogo de exercícios</Link>
             </Button>
           </div>
-        ) : null}
+        ) : (
+          <Button asChild variant="secondary" className="mt-4">
+            <Link href="/minha-ficha">Ver minha ficha</Link>
+          </Button>
+        )}
       </Card>
 
       {professor ? (

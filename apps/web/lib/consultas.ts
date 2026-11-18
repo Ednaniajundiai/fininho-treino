@@ -75,6 +75,19 @@ export function confirmarAtivacao(temOutraAtiva: boolean): boolean {
   );
 }
 
+/** Ficha ativa do aluno logado, ou null sem ficha ativa (FR-008). Só consulta para aluno. */
+export function useMinhaFicha(habilitada: boolean) {
+  return useQuery({
+    queryKey: ['minha-ficha'],
+    enabled: habilitada,
+    queryFn: async () => {
+      const { data, error } = await api.GET('/api/minha-ficha');
+      if (!data) throw new Error(mensagemDeErro(error, 'Não foi possível carregar a sua ficha.'));
+      return data.ficha ?? null;
+    },
+  });
+}
+
 export function useFicha(id: string) {
   return useQuery({
     queryKey: ['ficha', id],

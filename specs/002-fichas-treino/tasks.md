@@ -74,17 +74,17 @@ banco de produção.
 
 ### Testes para a História 2 (escrever primeiro)
 
-- [ ] T026 [P] [US2] e2e `GET /minha-ficha`: 401 (sem token e com token inválido), 403 (professor), 403 (aluno com senha provisória: nenhuma rota da 002 leva `@PermiteSenhaProvisoria`), e o aluno recebe dias e itens iguais ao prescrito, na ordem, sem campos de outros alunos (FR-008, cenário 1) em `apps/api/test/minha-ficha.e2e-spec.ts`
-- [ ] T027 [P] [US2] e2e: aluno sem ficha ativa recebe vazio; ficha `DRAFT` ou arquivada nunca é devolvida (FR-008, FR-006, cenário 2) em `apps/api/test/minha-ficha.e2e-spec.ts`
-- [ ] T028 [P] [US2] e2e: aluno B não vê a ficha de A em `/minha-ficha`, e aluno acessando `GET /fichas/:id`, `POST /alunos/:alunoId/fichas` ou `POST /fichas/:id/ativar` recebe 403 (rotas da US1; o 403 do `PUT` fica em T034, pois a rota só nasce na US3) (FR-007, FR-008, cenários 3 e 4) em `apps/api/test/minha-ficha.e2e-spec.ts`
+- [x] T026 [P] [US2] e2e `GET /minha-ficha`: 401 (sem token e com token inválido), 403 (professor), 403 (aluno com senha provisória: nenhuma rota da 002 leva `@PermiteSenhaProvisoria`), e o aluno recebe dias e itens iguais ao prescrito, na ordem, sem campos de outros alunos (FR-008, cenário 1) em `apps/api/test/minha-ficha.e2e-spec.ts`
+- [x] T027 [P] [US2] e2e: aluno sem ficha ativa recebe vazio; ficha `DRAFT` ou arquivada nunca é devolvida (FR-008, FR-006, cenário 2) em `apps/api/test/minha-ficha.e2e-spec.ts`
+- [x] T028 [P] [US2] e2e: aluno B não vê a ficha de A em `/minha-ficha`, e aluno acessando `GET /fichas/:id`, `POST /alunos/:alunoId/fichas` ou `POST /fichas/:id/ativar` recebe 403 (rotas da US1; o 403 do `PUT` fica em T034, pois a rota só nasce na US3) (FR-007, FR-008, cenários 3 e 4) em `apps/api/test/minha-ficha.e2e-spec.ts`
 
 ### Implementação da História 2
 
-- [ ] T029 [US2] Implementar `GET /minha-ficha` com `@Roles('ALUNO')` (sem `@PermiteSenhaProvisoria`), filtrando por `student_id` = `@UsuarioAtual().id` e `status = ACTIVE`, em `apps/api/src/fichas/` (faz T026-T028 passarem; depende de T019)
-- [ ] T030 [US2] Regenerar com `pnpm gen:api` (`openapi.json` e `schema.d.ts`; depende de T029)
-- [ ] T031 [US2] Tela do aluno com dias, itens (séries, faixa, unidade; modalidade e duração), observações e aviso de "ainda não há ficha" em `apps/web/app/minha-ficha/` (depende de T030)
-- [ ] T032 [US2] Validação manual de FR-013 na tela do aluno: português, celular; captura 390px e 1280px, claro e escuro, contra `~/.claude/DESIGN.base.md` (depende de T031)
-- [ ] T033 [US2] Rodar `scripts/gate.sh` e `pnpm --filter api test:e2e`, gravar `specs/002-fichas-treino/ESTADO.md` e commitar a história 2 com a prova (depende de T026-T032)
+- [x] T029 [US2] Implementar `GET /minha-ficha` com `@Roles('ALUNO')` (sem `@PermiteSenhaProvisoria`), filtrando por `student_id` = `@UsuarioAtual().id` e `status = ACTIVE`, em `apps/api/src/fichas/` (faz T026-T028 passarem; depende de T019)
+- [x] T030 [US2] Regenerar com `pnpm gen:api` (`openapi.json` e `schema.d.ts`; depende de T029)
+- [x] T031 [US2] Tela do aluno com dias, itens (séries, faixa, unidade; modalidade e duração), observações e aviso de "ainda não há ficha" em `apps/web/app/minha-ficha/` (depende de T030)
+- [x] T032 [US2] Validação manual de FR-013 na tela do aluno: português, celular; captura 390px e 1280px, claro e escuro, contra `~/.claude/DESIGN.base.md` (depende de T031)
+- [x] T033 [US2] Rodar `scripts/gate.sh` e `pnpm --filter api test:e2e`, gravar `specs/002-fichas-treino/ESTADO.md` e commitar a história 2 com a prova (depende de T026-T032)
 
 **Checkpoint**: aluno vê a ficha ativa dele e nunca a de outro.
 
@@ -160,3 +160,11 @@ banco de produção.
 - Seed de dev idempotente, recusa `NODE_ENV=production`; rodou no banco de dev (34 exercícios fictícios, 17 por professor).
 - Front: validação manual do FR-013 por captura (editor e catálogo em 390px e 1280px, claro e escuro). Erros de formato do class-validator na API continuam em inglês; o front valida igual para a pessoa não vê-los.
 - Pendência: `design:accessibility-review` não rodada (fica para o Polimento).
+
+**História 2** — API e tela do aluno prontas; commit pendente (T033 aguarda o dono).
+- `GET /api/minha-ficha` em `MinhaFichaController` próprio (`@Roles('ALUNO')`, sem `@PermiteSenhaProvisoria`), aluno pelo token, filtro `status = ACTIVE`. Resposta `200 { ficha: FichaDto | null }`: o objeto envelope evita corpo vazio (o Nest manda `null` como resposta sem corpo, que o cliente gerado não lê). Registrar em `fichas/C-01` no T050.
+- Teste primeiro: 10 e2e em `apps/api/test/minha-ficha.e2e-spec.ts`; 9 falharam com 404 (rota inexistente) antes da implementação; o de 403 do aluno nas rotas do professor já passava (comportamento da US1, mantido como prova do cenário 4).
+- A ficha devolvida ao aluno é a mesma `FichaDto` do professor (inclui `professorId` e `exercicioId`); nenhum campo de outro aluno.
+- Front: `app/(app)/minha-ficha` reaproveita `DiasDaFicha`; menu por papel (aluno vê só "Minha ficha"; professor, o de antes); botão "Ver minha ficha" na página inicial do aluno. Professor que abrir a URL vê "Esta área é só do aluno." sem chamar a API.
+- T032: validação manual com contas fictícias (`@exemplo.test`, apagadas depois junto com ficha, exercícios e tokens de renovação): ficha igual à prescrita; 390px e 1280px, claro e escuro; aviso de "ainda não tem ficha" em 390px claro. Capturas fora do repositório (scratchpad da sessão).
+

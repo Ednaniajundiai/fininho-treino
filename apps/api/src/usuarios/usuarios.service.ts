@@ -1,9 +1,16 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { isEmail } from 'class-validator';
 import { SessoesService } from '../auth/sessoes.service.js';
-import type { User } from '../generated/prisma/client.js';
+import { Prisma, type User } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { normalizarEmail } from './email.js';
 import { gerarHashDaSenha, motivoSenhaInvalida } from './senha.js';
+import { gerarSenhaProvisoria } from './senha-provisoria.js';
 
 export type DadosDoProfessor = {
   nome: string;
@@ -12,6 +19,9 @@ export type DadosDoProfessor = {
   /** Confirmação explícita para trocar a senha de um professor que já existe. */
   redefinir?: boolean;
 };
+
+/** O aluno e a senha provisória em texto: o único momento em que ela existe fora do hash. */
+export type AlunoComSenhaProvisoria = { usuario: User; senhaProvisoria: string };
 
 @Injectable()
 export class UsuariosService {
@@ -27,16 +37,21 @@ export class UsuariosService {
   async criarProfessor(
     dados: DadosDoProfessor,
   ): Promise<{ acao: 'criado' | 'senha-redefinida'; usuario: User }> {
+    // O comando lê do terminal: aqui é a borda, então a validação que a API faz no DTO é feita
+    // aqui para o professor.
+    const nome = dados.nome.trim();
+    const email = normalizarEmail(dados.email);
+    if (nome.length < 2) throw new BadRequestException('Informe o nome do professor.');
+    if (!isEmail(email)) throw new BadRequestException('E-mail inválido.');
     const motivo = motivoSenhaInvalida(dados.senha);
     if (motivo) throw new BadRequestException(motivo);
 
-    const email = normalizarEmail(dados.email);
     const existente = await this.prisma.user.findUnique({ where: { email } });
 
     if (!existente) {
       const usuario = await this.prisma.user.create({
         data: {
-          name: dados.nome.trim(),
+          name: nome,
           email,
           passwordHash: await gerarHashDaSenha(dados.senha),
           role: 'PROFESSOR',
@@ -65,5 +80,72 @@ export class UsuariosService {
       });
     });
     return { acao: 'senha-redefinida', usuario };
+  }
+
+  /**
+   * `dados` chega validado e normalizado pelo CriarAlunoDto. O aluno fica vinculado ao
+   * professor que o criou, com uma senha provisória gerada aqui (contrato autenticacao/C-02).
+   */
+  async criarAluno(
+    professorId: string,
+    dados: { nome: string; email: string },
+  ): Promise<AlunoComSenhaProvisoria> {
+    const senhaProvisoria = gerarSenhaProvisoria();
+    try {
+      const usuario = await this.prisma.user.create({
+        data: {
+          name: dados.nome,
+          email: dados.email,
+          passwordHash: await gerarHashDaSenha(senhaProvisoria),
+          role: 'ALUNO',
+          mustChangePassword: true,
+          teacherId: professorId,
+        },
+      });
+      return { usuario, senhaProvisoria };
+    } catch (erro) {
+      // A unicidade do e-mail é do banco (índice único): vale também para criações simultâneas.
+      if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === 'P2002') {
+        throw new ConflictException('E-mail já cadastrado.');
+      }
+      throw erro;
+    }
+  }
+
+  listarAlunos(professorId: string): Promise<User[]> {
+    return this.prisma.user.findMany({
+      where: { teacherId: professorId },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  /** Nova provisória para quem esqueceu a senha: a anterior deixa de valer e as sessões caem. */
+  async redefinirSenhaAluno(
+    professorId: string,
+    alunoId: string,
+  ): Promise<AlunoComSenhaProvisoria> {
+    const aluno = await this.alunoDoProfessor(professorId, alunoId);
+    const senhaProvisoria = gerarSenhaProvisoria();
+    const passwordHash = await gerarHashDaSenha(senhaProvisoria);
+    const usuario = await this.prisma.$transaction(async (tx) => {
+      await this.sessoes.revogarDoUsuario(aluno.id, { tx });
+      return tx.user.update({
+        where: { id: aluno.id },
+        data: { passwordHash, mustChangePassword: true },
+      });
+    });
+    return { usuario, senhaProvisoria };
+  }
+
+  /**
+   * Checagem de posse (princípio I): o aluno só existe para o professor dele. Aluno de outro
+   * professor responde o mesmo "não encontrado" de um id inexistente, para não revelar que existe.
+   */
+  private async alunoDoProfessor(professorId: string, alunoId: string): Promise<User> {
+    const aluno = await this.prisma.user.findFirst({
+      where: { id: alunoId, teacherId: professorId },
+    });
+    if (!aluno) throw new NotFoundException('Aluno não encontrado.');
+    return aluno;
   }
 }

@@ -140,6 +140,131 @@
           "auth"
         ]
       }
+    },
+    "/api/alunos": {
+      "post": {
+        "operationId": "AlunosController_criar",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarAlunoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlunoComSenhaProvisoriaDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          },
+          "409": {
+            "description": "E-mail já cadastrado."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Criar a conta de um aluno, vinculada ao professor logado",
+        "tags": [
+          "alunos"
+        ]
+      },
+      "get": {
+        "operationId": "AlunosController_listar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContaDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Listar os alunos do professor logado",
+        "tags": [
+          "alunos"
+        ]
+      }
+    },
+    "/api/alunos/{id}/redefinir-senha": {
+      "post": {
+        "operationId": "AlunosController_redefinirSenha",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlunoComSenhaProvisoriaDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado."
+          },
+          "403": {
+            "description": "Sem permissão: só professor."
+          },
+          "404": {
+            "description": "Aluno não encontrado (inexistente ou de outro professor)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Gerar nova senha provisória para um aluno do professor logado",
+        "tags": [
+          "alunos"
+        ]
+      }
     }
   },
   "info": {
@@ -243,6 +368,40 @@
         "required": [
           "accessToken",
           "usuario"
+        ]
+      },
+      "CriarAlunoDto": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string",
+            "example": "Ari Alves"
+          },
+          "email": {
+            "type": "string",
+            "example": "ari@exemplo.test"
+          }
+        },
+        "required": [
+          "nome",
+          "email"
+        ]
+      },
+      "AlunoComSenhaProvisoriaDto": {
+        "type": "object",
+        "properties": {
+          "aluno": {
+            "$ref": "#/components/schemas/ContaDto"
+          },
+          "senhaProvisoria": {
+            "type": "string",
+            "description": "Senha provisória gerada pelo sistema. Mostrada só nesta resposta; não é consultável depois.",
+            "example": "abcd-efgh-jkmn"
+          }
+        },
+        "required": [
+          "aluno",
+          "senhaProvisoria"
         ]
       }
     }

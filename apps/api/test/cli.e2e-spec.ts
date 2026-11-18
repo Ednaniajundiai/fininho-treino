@@ -44,6 +44,14 @@ describe('comando administrativo: criar professor', () => {
     expect(await app.get(PrismaService).user.count()).toBe(0);
   });
 
+  it('recusa e-mail fora do formato e nome vazio, sem criar a conta (FR-003)', async () => {
+    await expect(usuarios.criarProfessor({ ...PAULA, email: 'isto-nao-e-email' })).rejects.toThrow(
+      /e-mail/i,
+    );
+    await expect(usuarios.criarProfessor({ ...PAULA, nome: '  ' })).rejects.toThrow(/nome/i);
+    expect(await app.get(PrismaService).user.count()).toBe(0);
+  });
+
   it('sem a confirmação de redefinir, recusa professor que já existe e não muda a senha (FR-004)', async () => {
     await usuarios.criarProfessor(PAULA);
 

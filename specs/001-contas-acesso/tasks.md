@@ -86,19 +86,19 @@ provisória), `apps/api/test/alunos.e2e-spec.ts`, `apps/web/app/(app)/alunos`,
 
 ### Testes para a História 2 ⚠️
 
-- [ ] T032 [P] [US2] Teste de unidade: a senha provisória gerada cumpre a política e não se repete, em `apps/api/src/usuarios/senha-provisoria.spec.ts` (FR-013)
-- [ ] T033 [P] [US2] Teste e2e (`lento`): professor cria aluno vinculado a ele e recebe a provisória uma vez; o aluno entra com ela; a provisória não aparece na listagem (cenário 1), em `apps/api/test/alunos.e2e-spec.ts` (FR-012, FR-013, FR-019)
-- [ ] T034 [P] [US2] Teste e2e (`lento`): e-mail já usado, com outra caixa e espaços, é recusado com 409 e nada é criado (cenário 2), em `apps/api/test/alunos.e2e-spec.ts` (FR-014)
-- [ ] T035 [P] [US2] Teste e2e (`lento`): cada professor lista só os próprios alunos (cenário 3), em `apps/api/test/alunos.e2e-spec.ts` (FR-015)
-- [ ] T036 [P] [US2] Teste e2e (`lento`): redefinir a senha de aluno próprio gera nova provisória, invalida a anterior e derruba as sessões dele (cenário 4); de aluno de outro professor e de id inexistente dá o mesmo 404 (cenário 5), em `apps/api/test/alunos.e2e-spec.ts` (FR-016)
-- [ ] T037 [P] [US2] Teste e2e (`lento`): as três rotas de alunos dão 401 sem token e 403 para aluno logado (cenário 6), em `apps/api/test/alunos.e2e-spec.ts` (FR-012, FR-010)
+- [x] T032 [P] [US2] Teste de unidade: a senha provisória gerada cumpre a política e não se repete, em `apps/api/src/usuarios/senha-provisoria.spec.ts` (FR-013)
+- [x] T033 [P] [US2] Teste e2e (`lento`): professor cria aluno vinculado a ele e recebe a provisória uma vez; o aluno entra com ela; a provisória não aparece na listagem (cenário 1), em `apps/api/test/alunos.e2e-spec.ts` (FR-012, FR-013, FR-019)
+- [x] T034 [P] [US2] Teste e2e (`lento`): e-mail já usado, com outra caixa e espaços, é recusado com 409 e nada é criado (cenário 2), em `apps/api/test/alunos.e2e-spec.ts` (FR-014)
+- [x] T035 [P] [US2] Teste e2e (`lento`): cada professor lista só os próprios alunos (cenário 3), em `apps/api/test/alunos.e2e-spec.ts` (FR-015)
+- [x] T036 [P] [US2] Teste e2e (`lento`): redefinir a senha de aluno próprio gera nova provisória, invalida a anterior e derruba as sessões dele (cenário 4); de aluno de outro professor e de id inexistente dá o mesmo 404 (cenário 5), em `apps/api/test/alunos.e2e-spec.ts` (FR-016)
+- [x] T037 [P] [US2] Teste e2e (`lento`): as três rotas de alunos dão 401 sem token e 403 para aluno logado (cenário 6), em `apps/api/test/alunos.e2e-spec.ts` (FR-012, FR-010)
 
 ### Implementação da História 2
 
-- [ ] T038 [US2] Geração da senha provisória e `UsuariosService.criarAluno`, `listarAlunos`, `redefinirSenhaAluno`, com a posse filtrada por `teacher_id` em `apps/api/src/usuarios/`
-- [ ] T039 [US2] `AlunosController` com `@Roles('PROFESSOR')`, DTOs e Swagger; regenerar `openapi.json` e os tipos do front (depende de T038)
-- [ ] T040 [US2] Front: `apps/web/app/(app)/alunos` com lista, formulário de criação, ação de redefinir e o aviso da provisória mostrada uma vez (FR-020) (depende de T039)
-- [ ] T041 [US2] Validação manual da tela de alunos com capturas (390px e 1280px, claro e escuro) (FR-020)
+- [x] T038 [US2] Geração da senha provisória e `UsuariosService.criarAluno`, `listarAlunos`, `redefinirSenhaAluno`, com a posse filtrada por `teacher_id` em `apps/api/src/usuarios/`
+- [x] T039 [US2] `AlunosController` com `@Roles('PROFESSOR')`, DTOs e Swagger; regenerar `openapi.json` e os tipos do front (depende de T038)
+- [x] T040 [US2] Front: `apps/web/app/(app)/alunos` com lista, formulário de criação, ação de redefinir e o aviso da provisória mostrada uma vez (FR-020) (depende de T039)
+- [x] T041 [US2] Validação manual da tela de alunos com capturas (390px e 1280px, claro e escuro) (FR-020)
 
 **Checkpoint**: História 2 funcional; gate e e2e verdes.
 
@@ -181,3 +181,14 @@ Feitas num commit só: a base não tem como ser provada sem a primeira rota.
 - **Capturas**: entrar e inicial conferidas em 390px claro e 1280px escuro. As combinações
   390px escuro e 1280px claro não foram captadas.
 - **Pendências**: nenhuma que bloqueie a História 2.
+
+### História 2 (2026-11-18)
+
+- **Feito**: T032 a T041. Unidade: 3 testes novos (19 no total); e2e: 14 testes em
+  `alunos.e2e-spec.ts` (44 no total), vistos falhar antes do código (404: rotas inexistentes).
+  Roteiro manual: criar aluno, provisória mostrada uma vez, lista; capturas em 390px escuro e
+  1280px claro.
+- **Junto neste commit**, por achado da revisão da História 1 (melhoria M3): o comando de
+  criar professor passa a recusar e-mail fora do formato e nome vazio, com teste.
+- **Desvios do plano**: nenhum.
+- **Pendências**: a redefinição de senha na tela não foi exercitada à mão (coberta por e2e).

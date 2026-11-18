@@ -89,6 +89,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/alunos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar os alunos do professor logado */
+        get: operations["AlunosController_listar"];
+        put?: never;
+        /** Criar a conta de um aluno, vinculada ao professor logado */
+        post: operations["AlunosController_criar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/alunos/{id}/redefinir-senha": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gerar nova senha provisória para um aluno do professor logado */
+        post: operations["AlunosController_redefinirSenha"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -119,6 +154,20 @@ export interface components {
             /** @description JWT de acesso, válido por 15 minutos. Guardar só em memória. */
             accessToken: string;
             usuario: components["schemas"]["ContaDto"];
+        };
+        CriarAlunoDto: {
+            /** @example Ari Alves */
+            nome: string;
+            /** @example ari@exemplo.test */
+            email: string;
+        };
+        AlunoComSenhaProvisoriaDto: {
+            aluno: components["schemas"]["ContaDto"];
+            /**
+             * @description Senha provisória gerada pelo sistema. Mostrada só nesta resposta; não é consultável depois.
+             * @example abcd-efgh-jkmn
+             */
+            senhaProvisoria: string;
         };
     };
     responses: never;
@@ -247,6 +296,125 @@ export interface operations {
             };
             /** @description Não autenticado. */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AlunosController_listar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContaDto"][];
+                };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AlunosController_criar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CriarAlunoDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlunoComSenhaProvisoriaDto"];
+                };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description E-mail já cadastrado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AlunosController_redefinirSenha: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlunoComSenhaProvisoriaDto"];
+                };
+            };
+            /** @description Não autenticado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Sem permissão: só professor. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Aluno não encontrado (inexistente ou de outro professor). */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

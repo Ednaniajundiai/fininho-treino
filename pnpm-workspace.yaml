@@ -1,0 +1,15 @@
+packages:
+  - apps/*
+
+# Scripts de instalação liberados só para o que precisa compilar ou baixar binário.
+allowBuilds:
+  argon2: true
+  prisma: true
+  '@prisma/engines': true
+  '@scarf/scarf': false
+  sharp: false
+  unrs-resolver: false
+
+minimumReleaseAgeExclude:
+  - '@tanstack/query-core@5.108.0'
+  - '@tanstack/react-query@5.108.0'

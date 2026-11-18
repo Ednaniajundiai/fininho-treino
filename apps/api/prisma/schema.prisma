@@ -1,0 +1,58 @@
+// Contas e sessões de acesso (feature 001). Contrato: specs/_sistema/autenticacao.md.
+// Tabelas e colunas em inglês; valores de domínio em português.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  PROFESSOR
+  ALUNO
+
+  @@map("role")
+}
+
+model User {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  // Gravado já normalizado (minúsculas, sem espaços nas pontas): a unicidade vale sem caixa.
+  email              String   @unique
+  passwordHash       String   @map("password_hash")
+  role               Role
+  mustChangePassword Boolean  @default(false) @map("must_change_password")
+  // Todo aluno pertence a um professor; professor não tem professor (CHECK na migration).
+  teacherId          String?  @map("teacher_id") @db.Uuid
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  teacher       User?          @relation("TeacherStudents", fields: [teacherId], references: [id], onDelete: Restrict)
+  students      User[]         @relation("TeacherStudents")
+  refreshTokens RefreshToken[]
+
+  @@index([teacherId])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  // Todas as renovações de um mesmo login: reuso de token girado revoga a família.
+  familyId  String    @map("family_id") @db.Uuid
+  // SHA-256 do valor; o valor só existe no cookie do navegador.
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("refresh_tokens")
+}

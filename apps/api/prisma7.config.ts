@@ -11,6 +11,9 @@ export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
+    // Exercícios fictícios só para desenvolvimento (prisma/seed.ts). O Node roda o TypeScript
+    // direto (só tipos apagáveis); a flag é para o Node 22, no 24 ela é o padrão.
+    seed: 'node --experimental-strip-types prisma/seed.ts',
   },
   datasource: {
     url: process.env['DATABASE_URL'],

@@ -1,6 +1,6 @@
 # Board (roteiro)
 
-**Atualizado em**: 2026-11-17, pela PR do roteiro
+**Atualizado em**: 2026-11-18, pela `002-fichas-treino` (linha da 002: a ficha não tem carga)
 
 Estado ao vivo (em spec, em implementação, em PR) vem do git e do status local do supervisor, não
 deste arquivo. Limite: uma feature em implementação por vez; specs até duas à frente.
@@ -10,7 +10,7 @@ deste arquivo. Limite: uma feature em implementação por vez; specs até duas �
 | Ordem | Feature | Entrega | Depende de | Arquivos | Contratos (`_sistema/`) |
 |---|---|---|---|---|---|
 | 1 | 001-contas-acesso | Monorepo, Compose de dev e CI de pé; login com papéis professor e aluno; professor cria a conta do aluno; sem auto-cadastro; primeiro professor por comando de CLI | — | `package.json`, `pnpm-workspace.yaml`, `apps/api/src/{auth,usuarios,prisma}`, `apps/api/prisma/`, `apps/web/app/(auth)`, `docker-compose.yml`, `.github/workflows/`, `scripts/` | `autenticacao/C-01`, `C-02`, `C-03` |
-| 2 | 002-fichas-treino | Professor monta a ficha (dias A–E, exercícios, séries, faixa de repetições, carga) e atribui ao aluno; aluno vê a ficha dele | 001 | `apps/api/src/fichas`, `apps/web/app/fichas` | `fichas/C-01`, `C-02`, `C-03`; `autenticacao/C-01` |
+| 2 | 002-fichas-treino | Professor monta a ficha (dias em rotação A, B, C…, exercícios do catálogo, séries, faixa de repetições ou segundos, cardio; sem carga, que só existe na sessão da 003) e atribui ao aluno; aluno vê a ficha dele | 001 | `apps/api/src/{fichas,exercicios}`, `apps/web/app/(app)/(professor)/{fichas,exercicios}`, `apps/web/app/(app)/minha-ficha` | `fichas/C-01`, `C-02`, `C-03`; `autenticacao/C-01` |
 | 3 | 003-registro-sessao | Aluno registra a sessão feita de um dia da ficha (séries, repetições, carga, observação) e vê o histórico; professor vê as sessões dos alunos dele | 002 | `apps/api/src/sessoes`, `apps/web/app/sessoes` | `sessoes/C-01`, `C-02`; `fichas/C-03`; `autenticacao/C-01` |
 | 4 | 004-integracao-fininho-watch | Na conta do dono, a sessão do dia mostra o treino medido pelo relógio (esporte, início, duração); sem integração, aviso e o resto funciona | 003 | `apps/api/src/fininho-watch`, tela da sessão | `fininho-watch/C-01`; `sessoes/C-01` |
 | 5 | 005-deploy-vps | App em produção na VPS via Dokploy, com domínio e HTTPS, migrations no deploy, backup do Postgres, contas demo fictícias e carga da ficha real do dono por script local fora do Git | 004 | `apps/*/Dockerfile`, `docker-compose.prod.yml`, `scripts/` | — |

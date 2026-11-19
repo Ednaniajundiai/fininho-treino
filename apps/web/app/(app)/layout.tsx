@@ -2,10 +2,22 @@
 
 import { LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { type ReactNode, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useSessao } from '@/lib/sessao';
+import { cn } from '@/lib/utils';
+
+// Menu por papel: cada um só vê os links das telas que a API deixa ele abrir (as do professor
+// respondem 403 ao aluno, e /minha-ficha responde 403 ao professor).
+const MENU = {
+  PROFESSOR: [
+    { href: '/alunos', rotulo: 'Alunos' },
+    { href: '/exercicios', rotulo: 'Exercícios' },
+    { href: '/fichas', rotulo: 'Fichas' },
+  ],
+  ALUNO: [{ href: '/minha-ficha', rotulo: 'Minha ficha' }],
+};
 
 /**
  * Área logada. Só esconde o que a API já negaria: sem sessão, leva para /entrar. A
@@ -14,6 +26,7 @@ import { useSessao } from '@/lib/sessao';
 export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const sessao = useSessao();
+  const caminho = usePathname();
 
   // Conta com senha provisória só troca a senha (a API responde 403 em todo o resto).
   const precisaTrocarSenha = sessao.situacao === 'autenticado' && sessao.usuario.senhaProvisoria;
@@ -48,6 +61,24 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </Button>
           </div>
         </div>
+        <nav aria-label="Menu" className="mx-auto flex w-full max-w-3xl gap-1 px-2 pb-1">
+          {MENU[sessao.usuario.papel].map((item) => {
+            const atual = caminho === item.href || caminho.startsWith(`${item.href}/`);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={atual ? 'page' : undefined}
+                className={cn(
+                  'flex min-h-11 items-center rounded-control px-3 text-sm hover:text-foreground',
+                  atual ? 'bg-border/60 font-medium text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {item.rotulo}
+              </Link>
+            );
+          })}
+        </nav>
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">{children}</main>
     </>

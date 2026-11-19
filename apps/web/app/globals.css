@@ -5,6 +5,8 @@
  * componentes no padrão shadcn/ui esperam. Um acento só; profundidade por surface + line.
  */
 :root {
+  /* Controles nativos (seta do número, lista do select) seguem o tema. */
+  color-scheme: light;
   --background: #f7f7fb;
   --foreground: #1b1b3a;
   --card: #ffffff;
@@ -25,6 +27,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --background: #0e0f11;
     --foreground: #ececee;
     --card: #16171a;

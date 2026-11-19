@@ -30,9 +30,12 @@ model User {
   createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  teacher       User?          @relation("TeacherStudents", fields: [teacherId], references: [id], onDelete: Restrict)
-  students      User[]         @relation("TeacherStudents")
-  refreshTokens RefreshToken[]
+  teacher        User?          @relation("TeacherStudents", fields: [teacherId], references: [id], onDelete: Restrict)
+  students       User[]         @relation("TeacherStudents")
+  refreshTokens  RefreshToken[]
+  exercises      Exercise[]
+  plansAsTeacher Plan[]         @relation("PlanTeacher")
+  plansAsStudent Plan[]         @relation("PlanStudent")
 
   @@index([teacherId])
   @@map("users")
@@ -55,4 +58,114 @@ model RefreshToken {
   @@index([userId])
   @@index([familyId])
   @@map("refresh_tokens")
+}
+
+// Fichas de treino (feature 002). Contratos: specs/_sistema/fichas.md (C-01 a C-03).
+// Índices com expressão, índice parcial e CHECKs não cabem no schema: estão escritos à mão na
+// migration 2026..._fichas.
+
+enum ExerciseUnit {
+  REPS
+  SECONDS
+
+  @@map("exercise_unit")
+}
+
+/// DRAFT é estado extra além do contrato (aprovado em 2026-11-17): nunca chega ao aluno.
+enum PlanStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+
+  @@map("plan_status")
+}
+
+enum PlanItemType {
+  STRENGTH
+  CARDIO
+
+  @@map("plan_item_type")
+}
+
+enum CardioMode {
+  TREADMILL
+  BIKE
+  STAIRS
+  FREE
+
+  @@map("cardio_mode")
+}
+
+/// Catálogo do professor. Nome único por professor sem diferença de maiúsculas (índice
+/// único em (teacher_id, lower(name)), na migration). Nunca apagado: só desativado.
+model Exercise {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId   String       @map("teacher_id") @db.Uuid
+  name        String
+  defaultUnit ExerciseUnit @map("default_unit")
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  teacher User       @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  items   PlanItem[]
+
+  @@index([teacherId])
+  @@map("exercises")
+}
+
+/// Ficha de um aluno. No máximo uma ACTIVE por aluno (índice único parcial, na migration).
+model Plan {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  studentId String     @map("student_id") @db.Uuid
+  teacherId String     @map("teacher_id") @db.Uuid
+  name      String
+  status    PlanStatus @default(DRAFT)
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  student User      @relation("PlanStudent", fields: [studentId], references: [id], onDelete: Restrict)
+  teacher User      @relation("PlanTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  days    PlanDay[]
+
+  @@index([studentId])
+  @@index([teacherId])
+  @@map("plans")
+}
+
+/// Dia da rotação. O rótulo (A, B, C…) não é coluna: deriva de position (D-05).
+model PlanDay {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId   String @map("plan_id") @db.Uuid
+  position Int
+  title    String
+
+  plan  Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  items PlanItem[]
+
+  @@unique([planId, position])
+  @@map("plan_days")
+}
+
+/// Item do dia: de força ou de cardio. Os campos de cada tipo são garantidos por CHECK.
+model PlanItem {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dayId      String        @map("day_id") @db.Uuid
+  position   Int
+  type       PlanItemType
+  notes      String?
+  exerciseId String?       @map("exercise_id") @db.Uuid
+  sets       Int?
+  rangeMin   Int?          @map("range_min")
+  rangeMax   Int?          @map("range_max")
+  unit       ExerciseUnit?
+  cardioMode CardioMode?   @map("cardio_mode")
+  minutesMin Int?          @map("minutes_min")
+  minutesMax Int?          @map("minutes_max")
+
+  day      PlanDay   @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  exercise Exercise? @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+
+  @@unique([dayId, position])
+  @@index([exerciseId])
+  @@map("plan_items")
 }

@@ -25,6 +25,7 @@ docker compose up -d         # Postgres em 127.0.0.1:5450 (bancos de desenvolvim
 pnpm db:migrate              # aplica as migrations
 pnpm --filter api build
 pnpm --filter api cli criar-professor   # cria a primeira conta (pergunta nome, e-mail e senha)
+pnpm --filter api exec prisma db seed  # opcional: exercícios fictícios no catálogo de cada professor
 pnpm dev                     # API em http://127.0.0.1:3001 e web em http://localhost:3000
 ```
 
@@ -34,6 +35,11 @@ Abra `http://localhost:3000` e entre com a conta criada. A documentação da API
 Não há auto-cadastro: o primeiro professor nasce pelo comando acima, e é o professor quem cria
 as contas dos alunos. Para trocar a senha de um professor que já existe:
 `pnpm --filter api cli criar-professor --redefinir`.
+
+O professor cadastra os exercícios em **Exercícios** e monta a ficha de cada aluno em **Fichas**
+(dias em rotação A, B, C…, itens de força e de cardio); a ficha nasce como rascunho e só chega ao
+aluno depois de ativada. O aluno vê a ficha ativa em **Minha ficha**. O seed só roda fora de
+produção e contra banco local; em produção o catálogo começa vazio.
 
 ## Comandos
 

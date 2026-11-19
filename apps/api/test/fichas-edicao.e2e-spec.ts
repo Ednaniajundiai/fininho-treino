@@ -269,13 +269,16 @@ describe('fichas: editar, arquivar, trocar e duplicar (História 3)', () => {
       expect((await obter(c.paula.token, ficha.id)).body.status).toBe('ativa');
     });
 
-    it('ficha de outro professor responde 404, sem arquivar', async () => {
+    it('ficha de outro professor responde 404, igual a id inexistente, sem arquivar', async () => {
       const ficha = await fichaDaPaula();
 
       const resposta = await arquivar(c.caio.token, ficha.id);
+      const inexistente = await arquivar(c.caio.token, randomUUID());
 
       expect(resposta.status).toBe(404);
       expect(resposta.body.message).toBe('Ficha não encontrada.');
+      expect(inexistente.status).toBe(404);
+      expect(inexistente.body).toEqual(resposta.body);
       expect((await obter(c.paula.token, ficha.id)).body.status).toBe('ativa');
     });
 
@@ -364,15 +367,20 @@ describe('fichas: editar, arquivar, trocar e duplicar (História 3)', () => {
       expect(await prisma.plan.count()).toBe(1);
     });
 
-    it('ficha de outro professor ou aluno de destino de outro professor respondem 404', async () => {
+    it('ficha de outro professor (igual a id inexistente) ou aluno de destino de outro professor respondem 404', async () => {
       const ficha = await fichaDaPaula();
 
       const fichaDeOutro = await duplicar(c.caio.token, ficha.id, { alunoId: c.alunoDoCaio.id });
+      const fichaInexistente = await duplicar(c.caio.token, randomUUID(), {
+        alunoId: c.alunoDoCaio.id,
+      });
       const alunoDeOutro = await duplicar(c.paula.token, ficha.id, { alunoId: c.alunoDoCaio.id });
       const alunoInexistente = await duplicar(c.paula.token, ficha.id, { alunoId: randomUUID() });
 
       expect(fichaDeOutro.status).toBe(404);
       expect(fichaDeOutro.body.message).toBe('Ficha não encontrada.');
+      expect(fichaInexistente.status).toBe(404);
+      expect(fichaInexistente.body).toEqual(fichaDeOutro.body);
       for (const resposta of [alunoDeOutro, alunoInexistente]) {
         expect(resposta.status).toBe(404);
         expect(resposta.body.message).toBe('Aluno não encontrado.');

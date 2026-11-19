@@ -1,6 +1,6 @@
-import { ApiPropertyOptional, ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsIn, IsOptional, IsString, Length } from 'class-validator';
+import { IsBoolean, IsIn, IsString, Length, ValidateIf } from 'class-validator';
 import type { Exercise } from '../../generated/prisma/client.js';
 import { UNIDADES, type Unidade } from '../../fichas/ficha-validation.js';
 import { unidadeParaAApi } from '../unidade.js';
@@ -20,12 +20,27 @@ export class CriarExercicioDto {
   unidadePadrao!: Unidade;
 }
 
+/** Só o campo presente é validado: ausente é opcional, mas `null` não passa (vira 400). */
+const sePresente = () => ValidateIf((_objeto: object, valor: unknown) => valor !== undefined);
+
 /** Tudo opcional: só o que vier muda. Desativar é `ativo: false`; nunca apaga (FR-011). */
-export class AtualizarExercicioDto extends PartialType(CriarExercicioDto) {
+export class AtualizarExercicioDto {
+  @ApiPropertyOptional({ example: 'Supino reto' })
+  @Transform(aparar)
+  @sePresente()
+  @IsString()
+  @Length(1, 100)
+  nome?: string;
+
+  @ApiPropertyOptional({ enum: UNIDADES, enumName: 'Unidade' })
+  @sePresente()
+  @IsIn(UNIDADES)
+  unidadePadrao?: Unidade;
+
   @ApiPropertyOptional({
     description: 'Falso desativa: some das novas escolhas e segue nas fichas que o usam.',
   })
-  @IsOptional()
+  @sePresente()
   @IsBoolean()
   ativo?: boolean;
 }

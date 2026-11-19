@@ -221,6 +221,18 @@ describe('catálogo de exercícios: /api/exercicios', () => {
       expect((await alterar(c.paula.token, supino.id, { teacherId: c.caio.id })).status).toBe(400);
     });
 
+    it('recusa null em nome, unidade padrão e ativo com 400, sem alterar', async () => {
+      const supino = await supinoDaPaula();
+
+      for (const campo of ['nome', 'unidadePadrao', 'ativo']) {
+        const resposta = await alterar(c.paula.token, supino.id, { [campo]: null });
+        expect(resposta.status, campo).toBe(400);
+      }
+      expect((await listar(c.paula.token)).body).toEqual([
+        { id: supino.id, nome: 'Supino reto', unidadePadrao: 'repeticoes', ativo: true },
+      ]);
+    });
+
     it('desativado some das novas escolhas e continua na ficha existente e na do aluno', async () => {
       const supino = await supinoDaPaula();
       const ficha = (await criarFicha(supino.id, { ativar: true })).body as { id: string };

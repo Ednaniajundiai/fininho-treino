@@ -125,13 +125,13 @@ banco de produção.
 
 ## Fase 6: Polimento e Preocupações Transversais
 
-- [ ] T049 [P] Atualizar documentação afetada: `specs/BOARD.md` (corrigir a menção a "carga" na ficha) e README/mapa do código das linhas de `fichas`
-- [ ] T050 Aplicar "Contratos tocados" em `specs/_sistema/` (`fichas/C-01`, `fichas/C-02`, `fichas/C-03`, conforme a seção da spec; `autenticacao/C-01` só consumido)
-- [ ] T051 Checagem de segurança: nenhuma rota de `fichas`/`exercicios` sem `@Roles()` e nenhuma com `@Public()` ou `@PermiteSenhaProvisoria()`; posse por `teacher_id` em toda consulta; log sem dado de treino em texto; seed, fixtures e prints só fictícios (princípios I e II); registrar na retro o risco aceito da 001: token de acesso de aluno vale até 15 min depois de a senha ser redefinida (somente leitura da própria ficha; sem teste de revogação imediata)
-- [ ] T052 Revisar cobertura de teste contra FR-001 a FR-014 (FR-013 por validação manual) e apagar teste duplicado ou que não testa comportamento
-- [ ] T053 Escrever o plano de desfazer da migration (Prisma não gera `down`) para a descrição da PR e documentar variáveis novas, se houver, em `.env.example`
-- [ ] T054 Gravar `specs/002-fichas-treino/retro.md`
-- [ ] T055 Rodar os gates de PR do `constitution/workflow.md` (`pnpm -r lint`, `pnpm -r typecheck`, `pnpm -r test`, `pnpm --filter api test:e2e`, `pnpm -r build`, sem `console.log`) e o `scripts/gate.sh` (depende de T025, T033, T048, T049-T054)
+- [x] T049 [P] Atualizar documentação afetada: `specs/BOARD.md` (corrigir a menção a "carga" na ficha) e README/mapa do código das linhas de `fichas`
+- [x] T050 Aplicar "Contratos tocados" em `specs/_sistema/` (`fichas/C-01`, `fichas/C-02`, `fichas/C-03`, conforme a seção da spec; `autenticacao/C-01` só consumido)
+- [x] T051 Checagem de segurança: nenhuma rota de `fichas`/`exercicios` sem `@Roles()` e nenhuma com `@Public()` ou `@PermiteSenhaProvisoria()`; posse por `teacher_id` em toda consulta; log sem dado de treino em texto; seed, fixtures e prints só fictícios (princípios I e II); registrar na retro o risco aceito da 001: token de acesso de aluno vale até 15 min depois de a senha ser redefinida (somente leitura da própria ficha; sem teste de revogação imediata)
+- [x] T052 Revisar cobertura de teste contra FR-001 a FR-014 (FR-013 por validação manual) e apagar teste duplicado ou que não testa comportamento
+- [x] T053 Escrever o plano de desfazer da migration (Prisma não gera `down`) para a descrição da PR e documentar variáveis novas, se houver, em `.env.example`
+- [x] T054 Gravar `specs/002-fichas-treino/retro.md`
+- [x] T055 Rodar os gates de PR do `constitution/workflow.md` (`pnpm -r lint`, `pnpm -r typecheck`, `pnpm -r test`, `pnpm --filter api test:e2e`, `pnpm -r build`, sem `console.log`) e o `scripts/gate.sh` (depende de T025, T033, T048, T049-T054)
 
 ## Dependências e Ordem de Execução
 
@@ -181,3 +181,17 @@ banco de produção.
 - US2: o teste que forçava "arquivada" por `updateMany` usa agora a rota real de arquivar.
 - Front: página `fichas/[id]/editar` (o editor da criação, preenchido; arquivada mostra só o aviso), ações na página da ficha (Ativar, Editar, Arquivar com confirmação, Duplicar com escolha do aluno), "Salvar e ativar" pede confirmação quando já há ativa, Desativar/Reativar no catálogo. Arquivada fica só leitura na tela.
 - T047: validação manual com contas fictícias `@exemplo.test` (apagadas depois, com fichas, exercícios e tokens): editar séries, duplicar para outro aluno e para o mesmo, ativar a cópia (confirmação de troca), arquivar (confirmação), arquivada só leitura, desativar exercício em uso e salvar a ficha que o usa. Capturas 390px e 1280px, claro e escuro, fora do repositório; o aviso "Você ainda não tem ficha" foi capturado nas 4 combinações (melhoria 4 da US2).
+
+**Polimento (T049-T053)** — sem commit; T054 (retro) e T055 (gates de PR) ficam com o dono.
+- T049: linha da 002 no `BOARD.md` sem "carga" (a carga só existe na sessão da 003), com os caminhos reais das telas e da API; a outra menção a "carga" no BOARD é a carga de dados da 005 e ficou. README: comando do seed (`pnpm --filter api exec prisma db seed`, opcional) e um parágrafo do roteiro de uso (Exercícios, Fichas, Minha ficha). Não há `docs/` (mapa do código ainda não existe); nada criado.
+- T050: `fichas/C-01`, `C-02` e `C-03` atualizados conforme "Contratos tocados" e as decisões das histórias (rascunho, arquivada só leitura, duplicar em rascunho, tetos, mínimo só para ativar, `exercicioNome`, `GET /minha-ficha` com envelope, valores em português; catálogo vazio em produção, desativado aceito na ficha que já o usa e copiado ao duplicar; C-03 sem mudança de regra). Histórico 2026-11-18 em cada contrato.
+- T051, varredura de segurança: OK.
+  - Rotas: `ExerciciosController` e `FichasController` com `@Roles('PROFESSOR')` na classe, `MinhaFichaController` com `@Roles('ALUNO')`; nenhum método sobrescreve; nenhum `@Public()` nem `@PermiteSenhaProvisoria()` em `src/fichas` ou `src/exercicios`.
+  - Posse: toda consulta do professor filtra `teacher_id` (no `findFirst`/`findMany`, no `SELECT ... FOR UPDATE` de `travarFichaEditavel` e no `travarExerciciosAtivos`); as escritas por id (`update`, `deleteMany` de dias) só rodam depois dessa trava, na mesma transação; `duplicar` passa por `obter` (posse da ficha) e `alunoDoProfessor` (posse do destino). `ativaDoAluno` usa o id do token, sem parâmetro de rota.
+  - Log: nenhum `Logger` nem `console` em `src/fichas` e `src/exercicios`.
+  - Dados: fixtures e testes só com `@exemplo.test` (Paula, Caio, Ari, Bia, Duda); seed com exercícios genéricos; nenhuma imagem versionada (capturas ficaram fora do repositório).
+  - Seed ganhou a segunda trava: recusa `DATABASE_URL` cujo host não seja `localhost`, `127.0.0.1` ou `::1`, com mensagem que diz o host recusado (conferido com host fictício e com 127.0.0.1).
+  - Para a retro (T054): risco aceito da 001, o token de acesso do aluno vale até 15 min depois de a senha ser redefinida (só leitura da própria ficha).
+- Achados das revisões corrigidos: (a) `PATCH /exercicios/:id` com `null` em `nome`, `unidadePadrao` ou `ativo` dava 500; teste e2e novo falhou com 500 e passou com o DTO explícito (`ValidateIf` só para campo presente, no lugar do `PartialType`, que deixava `null` passar); `openapi.json` não mudou. (b) arquivar e duplicar: o teste de 404 de outro dono compara com id inexistente (mesmo status e corpo); passou de primeira, o comportamento já estava certo. (c) seed, acima. As demais melhorias das revisões seguem registradas, sem mudança.
+- T052: FR-001 a FR-012 e FR-014 têm teste (e2e por rota, unidade em `ficha-validation.spec.ts`, regras do banco em `fichas-db.e2e-spec.ts`); FR-013 por validação manual. Nenhum teste apagado: as sobreposições aparentes testam camadas ou rotas diferentes (tetos no `POST` e no `PUT`; rótulos na unidade e no `PUT`; 403 do aluno nas rotas do professor com o id da própria ficha, cenário 4 da US2).
+- T053: `desfazer-migration.md` com o SQL de reversão e o procedimento; conferido no banco de teste (reverteu as 4 tabelas, os 4 tipos e a linha em `_prisma_migrations`; `prisma migrate deploy` reaplicou). Sem variável nova; `.env.example` sem mudança.

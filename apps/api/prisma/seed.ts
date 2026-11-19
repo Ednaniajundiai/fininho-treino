@@ -35,6 +35,15 @@ if (process.env['NODE_ENV'] === 'production') {
 }
 const url = process.env['DATABASE_URL'];
 if (!url) throw new Error('Defina DATABASE_URL (o .env da raiz é lido pelo prisma7.config.ts).');
+// Segunda trava: NODE_ENV pode faltar num servidor; o banco precisa estar nesta máquina.
+const HOSTS_LOCAIS = ['localhost', '127.0.0.1', '[::1]', '::1'];
+const host = URL.canParse(url) ? new URL(url).hostname : '';
+if (!HOSTS_LOCAIS.includes(host)) {
+  throw new Error(
+    `O seed é só de desenvolvimento e roda apenas em banco local (localhost, 127.0.0.1 ou ::1); ` +
+      `o DATABASE_URL aponta para "${host || 'host não identificado'}".`,
+  );
+}
 
 const cliente = new pg.Client({ connectionString: url });
 await cliente.connect();
